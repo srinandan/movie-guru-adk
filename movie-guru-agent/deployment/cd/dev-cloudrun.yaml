@@ -1,0 +1,95 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+steps:
+  # Build and Push
+  - name: "gcr.io/cloud-builders/docker"
+    env:
+      - 'DOCKER_BUILDKIT=1'  
+    args:
+      [
+        "build",
+        "-t",
+        "$_REGION-docker.pkg.dev/$PROJECT_ID/$_ARTIFACT_REGISTRY_REPO_NAME/$_CONTAINER_NAME:${_COMMIT_SHA}",
+        ".",
+      ]
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "push",
+        "$_REGION-docker.pkg.dev/$PROJECT_ID/$_ARTIFACT_REGISTRY_REPO_NAME/$_CONTAINER_NAME:${_COMMIT_SHA}",
+      ]
+
+  # Deploy to Staging
+  - name: "gcr.io/cloud-builders/gcloud"
+    id: deploy-staging
+    entrypoint: gcloud
+    args:
+      - "--project"
+      - "${PROJECT_ID}"
+      - "--region" 
+      - "${LOCATION}"
+      - "--image"
+      - "$_REGION-docker.pkg.dev/$PROJECT_ID/$_ARTIFACT_REGISTRY_REPO_NAME/$_CONTAINER_NAME:${_COMMIT_SHA}"
+      - "--port" 
+      - "8080"
+      - "--cpu" 
+      - "1000m"
+      - "--memory" 
+      - "1Gi"
+      - "--concurrency"
+      - "10"
+      - "--service-account" 
+      - "movie-guru-chat-server-sa@${PROJECT_ID}.iam.gserviceaccount.com"
+      - "--set-env-vars" 
+      - 'MCPTOOLSET_URL="movie-guru-mcp-server-${PROJECT_NUMBER}.us-central1.run.app",GOOGLE_CLOUD_PROJECT="${PROJECT_ID}",GOOGLE_CLOUD_LOCATION="us-central1",MODEL="gemini-2.5-flash",USER_ID="fake",DB_HOST="${_DB_HOST}"'
+      - "--startup-probe"
+      - 'initialDelaySeconds=30,tcpSocket.port=8080,timeoutSeconds=240,periodSeconds=240,failureThreshold=1'
+      - "--max-instances" 
+      - "1"
+      - "--allow-unauthenticated"
+      - "--timeout"
+      - "300"
+      - "--cpu-boost"
+      - "--session-affinity"
+      - "--vpc-egress"
+      - "private-ranges-only"
+      - "--network"
+      - "movie-guru-network"
+      - "--subnet"
+      - "movie-guru-subnet"
+      - "--set-secrets"
+      - 'DB_PASSWORD=postgres-root-password-secret:latest'      
+      - "--ingress"
+      - "internal-and-cloud-load-balancing"
+
+substitutions:
+  _STAGING_PROJECT_ID: ${PROJECT_ID}
+  _REGION: ${LOCATION}
+  _ARTIFACT_REGISTRY_REPO_NAME: movie-guru
+  _CONTAINER_NAME: movie-guru-agent
+  _CLOUD_RUN_APP_SA_EMAIL: "movie-guru-chat-server-sa@${PROJECT_ID}.iam.gserviceaccount.com"
+  _MODEL: "gemini-2.5-flash"
+  _MCPTOOLSET_URL: "https://movie-guru-mcp-server-${PROJECT_NUMBER}.${LOCATION}.run.app"
+  _COMMIT_SHA: ${_COMMIT_SHA}
+
+images:
+  - $_REGION-docker.pkg.dev/$PROJECT_ID/$_ARTIFACT_REGISTRY_REPO_NAME/$_CONTAINER_NAME:${_COMMIT_SHA}  
+
+options:
+  pool:
+    name: "projects/$PROJECT_ID/locations/$LOCATION/workerPools/movie-guru"
+  logging: CLOUD_LOGGING_ONLY
+  substitutionOption: ALLOW_LOOSE
+  requestedVerifyOption: VERIFIED
