@@ -32,8 +32,8 @@ VERTEX_AI = os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
 USER = os.environ.setdefault("USER_ID", "fake")
 MODEL = os.environ.setdefault("MODEL", GEMINI25)
 API_BASE = os.environ.setdefault("API_BASE", "http://localhost:11434")
-MODEL_ARMOR_TEMPLATE = os.environ.setdefault(
-    "MODEL_ARMOR_TEMPLATE", "movie-guru")
+MODEL_ARMOR_TEMPLATE = os.environ.setdefault("MODEL_ARMOR_TEMPLATE",
+                                             "movie-guru")
 POSTER_DIRECTORY = os.environ.setdefault("POSTER_DIRECTORY", "/mnt")
 
 
@@ -64,4 +64,5 @@ def get_gcp_project_number() -> str | None:
 
 PROJECT_NUMBER = get_gcp_project_number()
 MCPTOOLSET = os.environ.setdefault(
-    f"MCPTOOLSET_URL", "movie-guru-mcp-server-{PROJECT_NUMBER}.{REGION}.run.app")
+    f"MCPTOOLSET_URL",
+    "movie-guru-mcp-server-{PROJECT_NUMBER}.{REGION}.run.app")

@@ -37,6 +37,7 @@ from app.utils.typing import Feedback
 
 
 class AgentEngineApp(AdkApp):
+
     def set_up(self) -> None:
         """Set up logging and tracing for the agent engine app."""
         super().set_up()
@@ -45,9 +46,7 @@ class AgentEngineApp(AdkApp):
         provider = TracerProvider()
         processor = export.BatchSpanProcessor(
             CloudTraceLoggingSpanExporter(
-                project_id=os.environ.get("GOOGLE_CLOUD_PROJECT")
-            )
-        )
+                project_id=os.environ.get("GOOGLE_CLOUD_PROJECT")))
         provider.add_span_processor(processor)
         trace.set_tracer_provider(provider)
 
@@ -60,8 +59,7 @@ class AgentEngineApp(AdkApp):
             session_service_builder=template_attributes.get(
                 "session_service_builder"),
             artifact_service_builder=template_attributes.get(
-                "artifact_service_builder"
-            ),
+                "artifact_service_builder"),
             env_vars=template_attributes.get("env_vars"),
         )
 
@@ -78,14 +76,15 @@ def deploy_agent_engine_app(
 
     staging_bucket_uri = f"gs://{project}"
     artifacts_bucket_name = f"{project}"
-    create_bucket_if_not_exists(
-        bucket_name=artifacts_bucket_name, project=project, location=location
-    )
-    create_bucket_if_not_exists(
-        bucket_name=staging_bucket_uri, project=project, location=location
-    )
+    create_bucket_if_not_exists(bucket_name=artifacts_bucket_name,
+                                project=project,
+                                location=location)
+    create_bucket_if_not_exists(bucket_name=staging_bucket_uri,
+                                project=project,
+                                location=location)
 
-    vertexai.init(project=project, location=location,
+    vertexai.init(project=project,
+                  location=location,
                   staging_bucket=staging_bucket_uri)
 
     # Read requirements
@@ -95,8 +94,7 @@ def deploy_agent_engine_app(
     agent_engine = AgentEngineApp(
         agent=root_agent,
         artifact_service_builder=lambda: GcsArtifactService(
-            bucket_name=artifacts_bucket_name
-        ),
+            bucket_name=artifacts_bucket_name),
     )
 
     # Set worker parallelism to 1
@@ -114,8 +112,8 @@ def deploy_agent_engine_app(
     agent_config["requirements"] = requirements
 
     # Check if an agent with this name already exists
-    existing_agents = list(agent_engines.list(
-        filter=f"display_name={agent_name}"))
+    existing_agents = list(
+        agent_engines.list(filter=f"display_name={agent_name}"))
     if existing_agents:
         # Update the existing agent with new configuration
         logging.info(f"Updating existing agent: {agent_name}")
@@ -172,7 +170,8 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--set-env-vars",
-        help="Comma-separated list of environment variables in KEY=VALUE format",
+        help=
+        "Comma-separated list of environment variables in KEY=VALUE format",
     )
     args = parser.parse_args()
 
@@ -180,7 +179,10 @@ if __name__ == "__main__":
 
     # initialize with the database password
     env_vars = {
-        "DB_PASSWORD": {"secret": "postgres-root-password-secret", "version": "1"},
+        "DB_PASSWORD": {
+            "secret": "postgres-root-password-secret",
+            "version": "1"
+        },
     }
 
     if args.set_env_vars:

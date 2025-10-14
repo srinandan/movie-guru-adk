@@ -27,7 +27,6 @@ from app.utils.context import user_id_context
 from app.subagents.userprofile.userprofile import get_user_profile_agent
 from app.subagents.conversation_analysis.conversation_analysis import get_conversation_analysis_agent
 
-
 # output schema cannot be used with tools
 
 
@@ -43,7 +42,9 @@ def get_user() -> str | None:
     return USER
 
 
-def before_model_callback(callback_context: CallbackContext, llm_request: LlmRequest) -> Optional[LlmResponse | None]:
+def before_model_callback(
+        callback_context: CallbackContext,
+        llm_request: LlmRequest) -> Optional[LlmResponse | None]:
     # call the conversation analysis agent & user profile agent
     print("before_model_callback - call other agents: {llm_request}")
     return None
@@ -57,7 +58,8 @@ def get_recommender_agent() -> Agent:
 
     return Agent(name="recommender_agent",
                  model=get_model(),
-                 description="Agent to recommend movies based on the user's preferences.",
+                 description=
+                 "Agent to recommend movies based on the user's preferences.",
                  before_model_callback=before_model_callback,
                  instruction="""
         You are a friendly movie expert. Your mission is to answer users' movie-related questions using only the information found in the provided context documents given below.
@@ -93,13 +95,9 @@ def get_recommender_agent() -> Agent:
     """,
                  tools=[
                      AgentTool(agent=user_profile_agent),
-                     AgentTool(agent=conversation_analysis_agent),
-                     load_memory,
-                     MCPToolset(
-                         connection_params=SseConnectionParams(
-                             url=get_mcp_url(),
-                             headers={"x-user-id": get_user()}),
-                     )
+                     AgentTool(agent=conversation_analysis_agent), load_memory,
+                     MCPToolset(connection_params=SseConnectionParams(
+                         url=get_mcp_url(), headers={"x-user-id":
+                                                     get_user()}), )
                  ],
-                 output_key="recommenderOutput"
-                 )
+                 output_key="recommenderOutput")

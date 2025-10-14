@@ -30,18 +30,18 @@ class UserProfileOutput(BaseModel):
         description="A list of profile change recommendations")
 
 
-def after_model_callback(callback_context, llm_response) -> Optional[LlmResponse | None]:
+def after_model_callback(callback_context,
+                         llm_response) -> Optional[LlmResponse | None]:
     print("after_model_callback - user_profile_agent")
     return None
 
 
 def get_user_profile_agent() -> Agent:
     """Creates and returns the user profile agent."""
-    return Agent(
-        name="user_profile_agent",
-        model=get_model(),
-        description="Agent to profile the user's likes and dislikes.",
-        instruction="""
+    return Agent(name="user_profile_agent",
+                 model=get_model(),
+                 description="Agent to profile the user's likes and dislikes.",
+                 instruction="""
             You are a user's movie profiling expert focused on uncovering users' enduring likes and dislikes.
             Your task is to analyze the user message and extract ONLY strongly expressed, enduring likes and dislikes related to movies.
             Once you extract any new likes or dislikes from the current query respond with the items you extracted with:
@@ -62,7 +62,6 @@ def get_user_profile_agent() -> Agent:
             *   a list of *profileChangeRecommendations* that are a list of extracted strong likes or dislikes with the following fields: category, item, reason, sentiment
             *   Do not return this response to the user. This is meant for internal user profile updates only.
         """,
-        output_schema=UserProfileOutput,
-        output_key="userProfileOutput",
-        after_model_callback=after_model_callback
-    )
+                 output_schema=UserProfileOutput,
+                 output_key="userProfileOutput",
+                 after_model_callback=after_model_callback)

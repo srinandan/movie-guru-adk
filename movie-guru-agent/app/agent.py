@@ -22,7 +22,8 @@ from a2a.types import AgentCard
 my_agent_card = AgentCard(
     name="movie_guru_agent",
     url="https://movieguruagent.endpoints.srinandans-next25-demo.cloud.goog",
-    description="Executes a sequence of user profile, recommendations and sentiment analysis to return a list of movies.",
+    description=
+    "Executes a sequence of user profile, recommendations and sentiment analysis to return a list of movies.",
     version="1.0.0",
     capabilities={},
     skills=[],
@@ -39,7 +40,8 @@ def get_agent() -> SequentialAgent:
         sub_agents=[
             get_recommender_agent(),
         ],
-        description="Executes a sequence of user profile, recommendations and sentiment analysis to return a list of movies.",
+        description=
+        "Executes a sequence of user profile, recommendations and sentiment analysis to return a list of movies.",
     )
 
 

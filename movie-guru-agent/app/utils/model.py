@@ -20,8 +20,7 @@ from app.utils.envvars import API_BASE, MODEL, GEMINI25, GEMINI20, OLLAMA
 def get_model() -> Any:
     if MODEL == "ollama":
         print(f"using ollama model {OLLAMA}")
-        ollama_model = LiteLlm(model=OLLAMA,
-                               api_base=API_BASE)
+        ollama_model = LiteLlm(model=OLLAMA, api_base=API_BASE)
         return ollama_model
     elif MODEL == "gemini-2.0-flash":
         print(f"using gemini 2.0 model {GEMINI20}")

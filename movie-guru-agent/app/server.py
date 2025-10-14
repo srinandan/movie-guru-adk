@@ -38,15 +38,13 @@ from app.utils.typing import Feedback
 from app.utils.envvars import PROJECT_ID, REGION, DB_HOST, DB_NAME, DB_PASSWORD, POSTER_DIRECTORY
 from app.utils.logging import logger
 
-allow_origins = (
-    os.getenv("ALLOW_ORIGINS", "").split(
-        ",") if os.getenv("ALLOW_ORIGINS") else None
-)
+allow_origins = (os.getenv("ALLOW_ORIGINS", "").split(",")
+                 if os.getenv("ALLOW_ORIGINS") else None)
 
 bucket_name = f"gs://{PROJECT_ID}"
-create_bucket_if_not_exists(
-    bucket_name=bucket_name, project=PROJECT_ID, location=REGION
-)
+create_bucket_if_not_exists(bucket_name=bucket_name,
+                            project=PROJECT_ID,
+                            location=REGION)
 
 posters_bucket_name = f"{PROJECT_ID}_posters"
 
@@ -66,15 +64,14 @@ SESSION_DB_URL = (
 
 db_conn = None
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Logs all environment variables at application startup, redacting secrets."""
     logger.log("--- Environment Variables ---")
     for key, value in sorted(os.environ.items()):
-        if any(
-            secret in key.upper()
-            for secret in ["PASSWORD", "SECRET", "API_KEY", "TOKEN", "DB_PASSWORD"]
-        ):
+        if any(secret in key.upper() for secret in
+               ["PASSWORD", "SECRET", "API_KEY", "TOKEN", "DB_PASSWORD"]):
             value = "********"
         logger.log(f"{key}: {value}")
     logger.log("---------------------------")
@@ -137,17 +134,16 @@ async def add_root_span_for_request(request: Request, call_next):
 
 @app.post("/sessions")
 async def start_user_session(
-    x_user_id: Annotated[Union[str, None], Header(
-        alias="x-goog-authenticated-user-email")] = None
-):
+    x_user_id: Annotated[Union[str, None],
+                         Header(
+                             alias="x-goog-authenticated-user-email")] = None):
     """
     Starts a new session for the user identified by X-User-ID header.
     """
     if not x_user_id:
         return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            content={"message": "User login is required to start a session."}
-        )
+            content={"message": "User login is required to start a session."})
 
     # You can generate a session_id or use a consistent one per user/app
     # For a new conversation, a unique session_id is usually generated.
@@ -159,7 +155,9 @@ async def start_user_session(
 
     try:
         # Attempt to get an existing session for this user/session_id
-        session = await session_service.get_session(app_name="app", user_id=user_id, session_id=session_id)
+        session = await session_service.get_session(app_name="app",
+                                                    user_id=user_id,
+                                                    session_id=session_id)
         if not session:
             # If no session exists, create a new one, passing the extracted user_id
             session = await session_service.create_session(
@@ -180,43 +178,39 @@ async def start_user_session(
                 "session_id": session.id,
                 "user_id": session.user_id,
                 "app_name": session.app_name
-            }
-        )
+            })
     except Exception as e:
         print(f"Error managing session: {e}")
-        return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"message": "Failed to manage session."}
-        )
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            content={"message": "Failed to manage session."})
 
 
 @app.post("/sessions/{session_id}/events")
 async def add_event_to_session(
     session_id: str,
     event_data: dict,  # Expecting a dictionary for event data
-    x_user_id: Annotated[Union[str, None], Header(
-        alias="x-goog-authenticated-user-email")] = None
-):
+    x_user_id: Annotated[Union[str, None],
+                         Header(
+                             alias="x-goog-authenticated-user-email")] = None):
     if not x_user_id:
-        return JSONResponse(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            content={"message": "User login is required."}
-        )
+        return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED,
+                            content={"message": "User login is required."})
 
     try:
         user_id = x_user_id.split(":")[-1]
-        session = await session_service.get_session(app_name="app", user_id=user_id, session_id=session_id)
+        session = await session_service.get_session(app_name="app",
+                                                    user_id=user_id,
+                                                    session_id=session_id)
         if not session or session.user_id != x_user_id:
             return JSONResponse(
                 status_code=status.HTTP_404_NOT_FOUND,
                 content={
-                    "message": "Session not found or does not belong to this user."}
-            )
+                    "message":
+                    "Session not found or does not belong to this user."
+                })
 
         # Assuming event_data contains a 'text' field for a simple message event
-        new_event = Event(
-            author="user",
-        )
+        new_event = Event(author="user", )
         await session_service.append_event(session=session, event=new_event)
         return JSONResponse(content={"message": "Event added successfully."})
 
@@ -224,8 +218,7 @@ async def add_event_to_session(
         print(f"Error adding event: {e}")
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"message": "Failed to add event to session."}
-        )
+            content={"message": "Failed to add event to session."})
 
 
 @app.get("/posters/{poster_id}")
@@ -248,8 +241,8 @@ async def get_poster(poster_id: str):
 
     # Check if the file exists and is a file
     if not os.path.isfile(file_path):
-        raise HTTPException(
-            status_code=404, detail=f"Poster '{poster_id}.png' not found.")
+        raise HTTPException(status_code=404,
+                            detail=f"Poster '{poster_id}.png' not found.")
 
     try:
         # Read the file content in binary mode
@@ -260,8 +253,8 @@ async def get_poster(poster_id: str):
         return Response(content=content, media_type="image/png")
     except Exception as e:
         # Handle any other potential errors during file reading
-        raise HTTPException(
-            status_code=500, detail=f"Error reading poster file: {e}")
+        raise HTTPException(status_code=500,
+                            detail=f"Error reading poster file: {e}")
 
 
 def generate_download_signed_url_v4(blob_name):
@@ -277,18 +270,22 @@ def generate_download_signed_url_v4(blob_name):
     url_expiration = datetime.timedelta(minutes=15)
 
     try:
-        
-        logger.log(f"the bucket is {posters_bucket_name} and the poster is {blob_name}")
+
+        logger.log(
+            f"the bucket is {posters_bucket_name} and the poster is {blob_name}"
+        )
 
         credentials, project = auth.default()
         credentials.refresh(auth.transport.requests.Request())
 
-        storage_client = storage.Client(credentials=credentials, project=project)
+        storage_client = storage.Client(credentials=credentials,
+                                        project=project)
         bucket = storage_client.bucket(posters_bucket_name)
         blob = bucket.blob(blob_name)
 
-        logger.log(f"the service account is {credentials.service_account_email}")
-        
+        logger.log(
+            f"the service account is {credentials.service_account_email}")
+
         # Generate the signed URL.
         signed_url = blob.generate_signed_url(
             version="v4",
@@ -314,13 +311,11 @@ async def get_random_movies() -> List[Dict[str, Any]]:
     """
     global db_conn
     if not db_conn:
-        db_conn = psycopg2.connect(
-            dbname=DB_NAME,
-            user="postgres",
-            password=DB_PASSWORD,
-            host=DB_HOST,
-            port="5432"
-        )
+        db_conn = psycopg2.connect(dbname=DB_NAME,
+                                   user="postgres",
+                                   password=DB_PASSWORD,
+                                   host=DB_HOST,
+                                   port="5432")
 
     results = []
     try:
@@ -341,10 +336,12 @@ async def get_random_movies() -> List[Dict[str, Any]]:
                 movie_data = dict(zip(column_names, row))
                 poster_blob_name = movie_data.get("poster")
                 title = movie_data.get("title")
-                signed_poster_url = generate_download_signed_url_v4(poster_blob_name)
+                signed_poster_url = generate_download_signed_url_v4(
+                    poster_blob_name)
                 results.append({"title": title, "poster": signed_poster_url})
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error fetching random movies: {e}")
+        raise HTTPException(status_code=500,
+                            detail=f"Error fetching random movies: {e}")
     return results
 
 

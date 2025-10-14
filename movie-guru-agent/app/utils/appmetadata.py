@@ -27,18 +27,15 @@ def select_app_metadata(app_version: str) -> dict | None:
         A dictionary representing the fetched row from the database, or None.
     """
     try:
-        conn = pg8000.dbapi.connect(
-            user="postgres",
-            password=envvars.DB_PASSWORD,
-            host=envvars.DB_HOST,
-            database=envvars.DB_NAME,
-            port=5432
-        )
+        conn = pg8000.dbapi.connect(user="postgres",
+                                    password=envvars.DB_PASSWORD,
+                                    host=envvars.DB_HOST,
+                                    database=envvars.DB_NAME,
+                                    port=5432)
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT * FROM app_metadata WHERE app_version = %s LIMIT 1", (
-                app_version,)
-        )
+            "SELECT * FROM app_metadata WHERE app_version = %s LIMIT 1",
+            (app_version, ))
         row = cursor.fetchone()
         if row and cursor.description:
             column_names = [desc[0] for desc in cursor.description]

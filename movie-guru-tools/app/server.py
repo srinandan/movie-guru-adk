@@ -49,7 +49,11 @@ if not bucket_name:
         bucket_name = f"{gcp_project}_posters"
 
 
-def connect_to_movie_db(dbname: str, user: str, password: str, host: str, port: str = "5432") -> Any:
+def connect_to_movie_db(dbname: str,
+                        user: str,
+                        password: str,
+                        host: str,
+                        port: str = "5432") -> Any:
     """
     Establishes a connection to a PostgreSQL database with pgvector enabled.
 
@@ -107,17 +111,19 @@ def search_movies_by_embedding(query_text: str) -> List[Dict[str, Any]]:
         if db_password is None or db_host is None:
             raise ValueError(
                 "DB_PASSWORD or DB_HOST environment variable not set.")
-        conn = connect_to_movie_db(
-            dbname="fake-movies-db", user="postgres", password=db_password, host=db_host, port="5432")
+        conn = connect_to_movie_db(dbname="fake-movies-db",
+                                   user="postgres",
+                                   password=db_password,
+                                   host=db_host,
+                                   port="5432")
 
     print(
-        f"Agent is using Cloud SQL PostgreSQL retrieval tool for query: '{query_text}'")
+        f"Agent is using Cloud SQL PostgreSQL retrieval tool for query: '{query_text}'"
+    )
 
     # Generate embedding for the query using Vertex AI
-    query_embedding_input = TextEmbeddingInput(
-        text=query_text,
-        task_type="RETRIEVAL_QUERY"
-    )
+    query_embedding_input = TextEmbeddingInput(text=query_text,
+                                               task_type="RETRIEVAL_QUERY")
     query_embedding_response = embedding_model.get_embeddings(
         [query_embedding_input])
     query_embedding = query_embedding_response[0].values
@@ -152,7 +158,8 @@ def search_movies_by_embedding(query_text: str) -> List[Dict[str, Any]]:
                 movie_data = dict(zip(column_names, row))
                 poster_blob_name = movie_data.get("poster")
                 if poster_blob_name and bucket_name:
-                    movie_data["poster"] = generate_download_signed_url_v4(bucket_name, poster_blob_name)
+                    movie_data["poster"] = generate_download_signed_url_v4(
+                        bucket_name, poster_blob_name)
                 results.append(movie_data)
 
     except psycopg2.Error as e:
@@ -191,15 +198,18 @@ def get_user_preferences() -> dict:
         if db_password is None or db_host is None:
             raise ValueError(
                 "DB_PASSWORD or DB_HOST environment variable not set.")
-        conn = connect_to_movie_db(
-            dbname="fake-movies-db", user="postgres", password=db_password, host=db_host, port="5432")
+        conn = connect_to_movie_db(dbname="fake-movies-db",
+                                   user="postgres",
+                                   password=db_password,
+                                   host=db_host,
+                                   port="5432")
 
     try:
         with conn.cursor() as cur:
             # Execute the query
             query = "SELECT \"preferences\" FROM \"user_preferences\" WHERE \"user\" = %s;"
             print(query)
-            cur.execute(query, (user,))
+            cur.execute(query, (user, ))
 
             # Fetch the result
             result = cur.fetchone()
@@ -249,8 +259,11 @@ def create_or_update_user_preferences(preferences: dict) -> bool:
         if db_password is None or db_host is None:
             raise ValueError(
                 "DB_PASSWORD or DB_HOST environment variable not set.")
-        conn = connect_to_movie_db(
-            dbname="fake-movies-db", user="postgres", password=db_password, host=db_host, port="5432")
+        conn = connect_to_movie_db(dbname="fake-movies-db",
+                                   user="postgres",
+                                   password=db_password,
+                                   host=db_host,
+                                   port="5432")
     try:
 
         with conn.cursor() as cur:
@@ -280,6 +293,7 @@ def create_or_update_user_preferences(preferences: dict) -> bool:
         print(f"An unexpected error occurred: {e}")
         return False
 
+
 def generate_download_signed_url_v4(bucket_name, blob_name):
     """Generates a v4 signed URL for downloading a blob using ADC.
     """
@@ -290,16 +304,17 @@ def generate_download_signed_url_v4(bucket_name, blob_name):
     # blob_name = "your-object-name"
 
     # Set the expiration time for the URL.
-    url_expiration = datetime.timedelta(minutes=15)    
+    url_expiration = datetime.timedelta(minutes=15)
 
     try:
         credentials, project = auth.default()
         credentials.refresh(auth.transport.requests.Request())
 
-        storage_client = storage.Client(credentials=credentials, project=project)
+        storage_client = storage.Client(credentials=credentials,
+                                        project=project)
         bucket = storage_client.bucket(bucket_name)
-        blob = bucket.blob(blob_name)        
-        
+        blob = bucket.blob(blob_name)
+
         # Generate the signed URL.
         signed_url = blob.generate_signed_url(
             version="v4",
@@ -312,6 +327,7 @@ def generate_download_signed_url_v4(bucket_name, blob_name):
     except Exception as e:
         print(f"An error occurred: {e}")
         return None
+
 
 @mcp.tool()
 def get_random_movies() -> List[Dict[str, Any]]:
@@ -330,8 +346,11 @@ def get_random_movies() -> List[Dict[str, Any]]:
         if db_password is None or db_host is None:
             raise ValueError(
                 "DB_PASSWORD or DB_HOST environment variable not set.")
-        conn = connect_to_movie_db(
-            dbname="fake-movies-db", user="postgres", password=db_password, host=db_host, port="5432")
+        conn = connect_to_movie_db(dbname="fake-movies-db",
+                                   user="postgres",
+                                   password=db_password,
+                                   host=db_host,
+                                   port="5432")
 
     print("Agent is using get_random_movies tool.")
 
@@ -349,7 +368,9 @@ def get_random_movies() -> List[Dict[str, Any]]:
 
             for row in rows:
                 title, poster_blob_name = row
-                signed_poster_url = generate_download_signed_url_v4(bucket_name, poster_blob_name) if poster_blob_name and bucket_name else None
+                signed_poster_url = generate_download_signed_url_v4(
+                    bucket_name, poster_blob_name
+                ) if poster_blob_name and bucket_name else None
                 results.append({"title": title, "poster": signed_poster_url})
 
     except psycopg2.Error as e:
@@ -359,6 +380,7 @@ def get_random_movies() -> List[Dict[str, Any]]:
         print(f"An unexpected error occurred: {e}")
         return []
     return results
+
 
 if __name__ == "__main__":
     mcp.run(transport="sse", host="0.0.0.0", port=8080)
