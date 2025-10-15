@@ -24,9 +24,11 @@ backend:
 		--memory 1Gi \
 		--concurrency 10 \
 		--service-account movie-guru-chat-server-sa@${PROJECT_ID}.iam.gserviceaccount.com \
-		--set-env-vars VITE_API_BASE_URL="https://movie-guru-agent-${PROJECT_NUMBER}.${REGION}.run.app" \
+		--set-env-vars VITE_API_BASE_URL="https://movieguruagent.endpoints.srinandans-next25-demo.cloud.goog" \
 		--cpu-boost \
-		--vpc-egress private-ranges-only \
+		--vpc-egress all \
 		--network movie-guru-network \
 		--subnet movie-guru-subnet \
+		--max-instances 1 \
+		--min-instances 1 \
 		--ingress internal-and-cloud-load-balancing
