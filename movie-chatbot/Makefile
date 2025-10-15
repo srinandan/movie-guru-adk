@@ -9,7 +9,7 @@ build:
 	docker build -t $(REGION)-docker.pkg.dev/$(PROJECT_ID)/movie-guru-repo/$(SERVICE_NAME) .
 
 
-deploy:
+backend:
 	@echo "Deploying $(SERVICE_NAME) to Cloud Run..."
 	gcloud run deploy $(SERVICE_NAME) \
 		--project $(PROJECT_ID) \
