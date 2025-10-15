@@ -125,6 +125,7 @@ async def add_root_span_for_request(request: Request, call_next):
             span.set_attribute("http.method", request.method)
             span.set_attribute("http.url", str(request.url))
             span.set_attribute("user.id", user_id)
+            span.set_attribute("service.name", "movie-guru-agent")
             response = await call_next(request)
             span.set_attribute("http.status_code", response.status_code)
             return response
