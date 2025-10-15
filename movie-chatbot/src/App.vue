@@ -18,9 +18,10 @@
 <script setup>
 import { ref, onMounted, reactive, nextTick } from 'vue';
 
-const apiBaseUrl = "https://movie-guru-agent-432423772502.us-central1.run.app";
+const apiBaseUrl = "https://movieguruagent.endpoints.srinandans-next25-demo.cloud.goog";
 
 const sessionId = ref(null);
+const sessionUserId = ref(null);
 const messages = ref([]);
 const userInput = ref('');
 const featuredMovies = ref([]);
@@ -41,7 +42,8 @@ onMounted(async () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-goog-authenticated-user-email': 'srinandans@google.com',
+        //TODO: replace later
+        //'x-goog-authenticated-user-email': 'example@google.com',
       },
       body: JSON.stringify({
         state: {
@@ -51,6 +53,7 @@ onMounted(async () => {
     });
     const data = await sessionResponse.json();
     sessionId.value = data.session_id;
+    sessionUserId.value = data.user_id;
     messages.value.push({ author: 'system', text: 'Session created. How can I help you today?' });
   } catch (error) {
     console.error('Error creating session:', error);
@@ -59,7 +62,7 @@ onMounted(async () => {
 });
 
 const sendMessage = async () => {
-  if (!userInput.value.trim() || !sessionId.value) return;
+  if (!userInput.value.trim() || !sessionId.value || !sessionUserId.value) return;
 
   const userMessage = userInput.value;
   messages.value.push({ author: 'user', text: userMessage });
@@ -70,7 +73,7 @@ const sendMessage = async () => {
 
   const payload = {
     appName: 'app',
-    userId: 'srinandans@google.com',
+    userId: sessionUserId.value,//'example@google.com',
     sessionId: sessionId.value,
     newMessage: {
       role: 'user',
@@ -88,7 +91,8 @@ const sendMessage = async () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-goog-authenticated-user-email': 'srinandans@google.com',
+        //TODO: replace later
+        //'x-goog-authenticated-user-email': 'example@google.com',
       },
       body: JSON.stringify(payload),
     });
@@ -189,6 +193,9 @@ const sendMessage = async () => {
         <p>{{ movie.name }}</p>
       </div>
     </div>
+    <div id="user-info">
+      <p>{{ sessionUserId }}</p>
+    </div>
     <div id="app-container">
       <div id="title-container">
         <h1>Movie Guru</h1>
@@ -224,6 +231,15 @@ const sendMessage = async () => {
 <style scoped>
 #main-container {
   display: flex;
+}
+
+#user-info {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background-color: #f1f0f0;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
 }
 
 #featured-movies-container {
