@@ -18,7 +18,7 @@
 <script setup>
 import { ref, onMounted, reactive, nextTick } from 'vue';
 
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+const apiBaseUrl = "https://movie-guru-agent-432423772502.us-central1.run.app";
 
 const sessionId = ref(null);
 const messages = ref([]);
@@ -28,7 +28,7 @@ const featuredMovies = ref([]);
 onMounted(async () => {
   try {
     // Fetch featured movies
-    const featuredMoviesResponse = await fetch(`${apiBaseUrl}/random`);
+    const featuredMoviesResponse = await fetch(`${apiBaseUrl}/random?t=${Date.now()}`);
     if (featuredMoviesResponse.ok) {
       const featuredMoviesData = await featuredMoviesResponse.json();
       featuredMovies.value = featuredMoviesData.map(movie => ({ name: movie.title, poster: movie.poster }));
@@ -109,40 +109,61 @@ const sendMessage = async () => {
     agentMessage.text = '';
 
     if (Array.isArray(data)) {
-        let movieDataFound = false;
-        for (const item of data) {
-            if (item.content && item.content.parts && item.content.parts.length > 0 && item.content.parts[0].text && item.content.parts[0].text.includes('"movies"')) {
-                const text = item.content.parts[0].text;
-                const jsonString = text.replace(/```json\n|```/g, '');
-                try {
-                    const movieData = JSON.parse(jsonString);
-                    if (movieData.movies) {
-                        agentMessage.text = 'Here are some movies you might like:';
-                        movieData.movies.forEach(movie => {
-                            messages.value.push({
-                                author: 'movie',
-                                ...movie
-                            });
-                        });
-                        movieDataFound = true;
-                        break; // Exit loop once movie data is found
-                    }
-                } catch (e) {
-                    console.error('Error parsing movie JSON:', e);
-                    agentMessage.text = "Sorry, I couldn't parse the movie recommendations.";
+      let movieDataFound = false;
+      for (const item of data) {
+        if (item.content && item.content.parts) {
+          for (const part of item.content.parts) {
+            if (part.functionResponse && part.functionResponse.name === 'search_movies_by_embedding') {
+              const movies = JSON.parse(part.functionResponse.response.result.content[0].text);
+              if (movies && movies.length > 0) {
+                agentMessage.text = 'Here are some movies you might like:';
+                movies.forEach(movie => {
+                  messages.value.push({
+                    author: 'movie',
+                    name: movie.title,
+                    poster: movie.poster,
+                    released: movie.released,
+                    rating: movie.rating,
+                    plot: movie.plot
+                  });
+                });
+                movieDataFound = true;
+                break; 
+              }
+            } else if (part.text && part.text.includes('"movies"')) {
+              const jsonString = part.text.replace(/```json\n|```/g, '');
+              try {
+                const movieData = JSON.parse(jsonString);
+                if (movieData.movies) {
+                  agentMessage.text = 'Here are some movies you might like:';
+                  movieData.movies.forEach(movie => {
+                    messages.value.push({
+                      author: 'movie',
+                      ...movie
+                    });
+                  });
+                  movieDataFound = true;
+                  break;
                 }
+              } catch (e) {
+                console.error('Error parsing movie JSON:', e);
+                agentMessage.text = "Sorry, I couldn't parse the movie recommendations.";
+              }
             }
+          }
         }
-        if (!movieDataFound) {
-            // If no movies were found, check for a standard text response in the first element
-            if (data[0] && data[0].content && data[0].content.parts && data[0].content.parts.length > 0 && data[0].content.parts[0].text) {
-                agentMessage.text = data[0].content.parts[0].text;
-            } else {
-                agentMessage.text = "Sorry, I didn't get a response. Please try again.";
-            }
+        if (movieDataFound) break;
+      }
+
+      if (!movieDataFound) {
+        const lastMessage = data[data.length - 1];
+        if (lastMessage && lastMessage.content && lastMessage.content.parts && lastMessage.content.parts.length > 0 && lastMessage.content.parts[0].text) {
+          agentMessage.text = lastMessage.content.parts[0].text;
+        } else {
+          agentMessage.text = "Sorry, I didn't get a response. Please try again.";
         }
+      }
     } else if (data.content && data.content.parts && data.content.parts.length > 0) {
-      // This is a text response
       const part = data.content.parts[0];
       if (part.text) {
         agentMessage.text = part.text;
@@ -150,7 +171,7 @@ const sendMessage = async () => {
     } else {
       agentMessage.text = "Sorry, I didn't get a response. Please try again.";
     }
-    await nextTick(); // Force UI update
+    await nextTick();
 
   } catch (error) {
     console.error('Error sending message:', error);
@@ -323,6 +344,7 @@ img {
 .movie-card img {
   width: 200px;
   height: auto;
+  flex-shrink: 0;
 }
 
 .movie-details {
