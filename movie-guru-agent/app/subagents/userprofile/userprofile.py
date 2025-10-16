@@ -22,11 +22,11 @@ from app.utils.logging import logger
 
 
 class UserProfileOutput(BaseModel):
-    justification: str = Field(
+    justification: str = Field(default=None, 
         description="The reason about the query was created this way")
-    safetyIssue: bool = Field(
+    safetyIssue: bool = Field(default=None, 
         description="True if the query is considered dangerous")
-    profileChangeRecommendations: list = Field(
+    profileChangeRecommendations: list = Field(default=None, 
         description="A list of profile change recommendations")
 
 

@@ -26,8 +26,8 @@ from app.utils.logging import logger
 class ConversationOutput(BaseModel):
     outcome: str = Field(
         description="Classification of the conversation outcome")
-    sentiment: str = Field(description="Classification of the user sentiment")
-    reasoning: str = Field(
+    sentiment: str = Field(default=None, description="Classification of the user sentiment")
+    reasoning: str = Field(default=None, 
         description="Reasoning for the classification of outcome and sentiment"
     )
 
@@ -44,24 +44,6 @@ def after_model_callback(callback_context,
         ),
                            grounding_metadata=llm_response.grounding_metadata)
 
-
-def before_model_callback(
-        callback_context: CallbackContext,
-        llm_request: LlmRequest) -> Optional[LlmResponse | None]:
-    user_message = ""
-    if llm_request.contents and llm_request.contents[-1].role == 'user':
-        if llm_request.contents[-1].parts:
-            user_message = llm_request.contents[-1].parts[0].text
-            sanitized_response = sanitize_user_prompt(str(user_message))
-            if sanitized_response is not None:
-                return LlmResponse(content=types.Content(
-                    role="model",
-                    parts=[types.Part(text=sanitized_response)],
-                ))
-        else:
-            return None
-    else:
-        return None
 
 
 def get_conversation_analysis_agent() -> Agent:
@@ -124,5 +106,4 @@ def get_conversation_analysis_agent() -> Agent:
     """,
         output_schema=ConversationOutput,
         output_key="conversationAnalysisOutput",
-        before_model_callback=before_model_callback,
         after_model_callback=after_model_callback)
