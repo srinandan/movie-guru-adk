@@ -12,23 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM ollama/ollama:0.5.11
+FROM ollama/ollama:0.12.5
 
 # Listen on all interfaces, port 8080
-ENV OLLAMA_HOST 0.0.0.0:8080
+ENV OLLAMA_HOST=0.0.0.0:8080
 
 # Store model weight files in /models
-ENV OLLAMA_MODELS /models
+ENV OLLAMA_MODELS=/models
 
 # Reduce logging verbosity
-ENV OLLAMA_DEBUG false
+ENV OLLAMA_DEBUG=false
 
 # Never unload model weights from the GPU
-ENV OLLAMA_KEEP_ALIVE -1
+ENV OLLAMA_KEEP_ALIVE=-1
 
 # Store the model weights in the container image
-ENV MODEL gemma2:9b
-ENV EMBEDDING nomic-embed-text
+ENV MODEL=gemma3:4b
+ENV EMBEDDING=nomic-embed-text
 RUN ollama serve & sleep 5 && ollama pull $MODEL && ollama pull $EMBEDDING
 
 # Start Ollama
