@@ -151,7 +151,11 @@ async def start_user_session(
     # For persistent sessions across multiple conversations for the same user,
     # you might derive session_id from user_id or retrieve an existing one.
     # Example: unique session per request
-    session_id = f"session_{x_user_id}_{os.urandom(4).hex()}"
+    
+    # Get today's date
+    today = datetime.date.today()
+    ts = today.strftime("%y%m%d")
+    session_id = f"session_{x_user_id}_{ts}"
     user_id = x_user_id.split(":")[-1]
 
     try:
