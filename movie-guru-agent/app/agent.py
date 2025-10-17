@@ -15,23 +15,6 @@
 from google.adk.agents import SequentialAgent
 from app.subagents.recommendmovies.recommendmovies import get_recommender_agent
 
-from google.adk.a2a.utils.agent_to_a2a import to_a2a
-from a2a.types import AgentCard
-
-# Define A2A agent card
-my_agent_card = AgentCard(
-    name="movie_guru_agent",
-    url="https://movieguruagent.endpoints.srinandans-next25-demo.cloud.goog",
-    description=
-    "Executes a sequence of user profile, recommendations and sentiment analysis to return a list of movies.",
-    version="1.0.0",
-    capabilities={},
-    skills=[],
-    defaultInputModes=["text/plain"],
-    defaultOutputModes=["text/plain"],
-    supportsAuthenticatedExtendedCard=False,
-)
-
 
 def get_agent() -> SequentialAgent:
     """Creates and returns the movie guru agent."""
@@ -46,4 +29,3 @@ def get_agent() -> SequentialAgent:
 
 
 root_agent = get_agent()
-a2a_app = to_a2a(root_agent, port=8000, agent_card=my_agent_card)
