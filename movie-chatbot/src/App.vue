@@ -17,6 +17,8 @@
 
 <script setup>
 import { ref, onMounted, reactive, nextTick } from 'vue';
+// import sdk from './tracer';
+// import { SpanStatusCode } from '@opentelemetry/api';
 
 const apiBaseUrl = "https://movieguruagent.endpoints.srinandans-next25-demo.cloud.goog";
 
@@ -27,6 +29,7 @@ const userInput = ref('');
 const featuredMovies = ref([]);
 
 onMounted(async () => {
+  //const span = sdk.startSpan('onMounted');
   try {
     // Fetch featured movies
     const featuredMoviesResponse = await fetch(`${apiBaseUrl}/random?t=${Date.now()}`);
@@ -35,6 +38,7 @@ onMounted(async () => {
       featuredMovies.value = featuredMoviesData.map(movie => ({ name: movie.title, poster: movie.poster }));
     } else {
       console.error('Failed to fetch featured movies:', featuredMoviesResponse.statusText);
+      // span.setStatus({ code: SpanStatusCode.ERROR, message: 'Failed to fetch featured movies' });
     }
 
     // Create session
@@ -55,9 +59,13 @@ onMounted(async () => {
     sessionId.value = data.session_id;
     sessionUserId.value = data.user_id;
     messages.value.push({ author: 'system', text: 'Session created. How can I help you today?' });
+    //span.setStatus({ code: SpanStatusCode.OK });
   } catch (error) {
     console.error('Error creating session:', error);
     messages.value.push({ author: 'system', text: 'Error creating session. Please refresh the page.' });
+    //span.setStatus({ code: SpanStatusCode.ERROR, message: error.message });
+  } finally {
+    //span.end();
   }
 });
 

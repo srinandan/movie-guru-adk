@@ -19,7 +19,7 @@ FROM node:22-alpine
 WORKDIR /app
 
 # Copy package.json and package-lock.json to the working directory
-COPY package*.json index.html server.js vite.config.js ./
+COPY package*.json index.html *.js ./
 
 # Install any needed packages
 RUN npm install
@@ -32,6 +32,10 @@ RUN npm run build
 
 # Make port 8080 available to the world outside this container
 EXPOSE 8080
+
+ENV OTEL_SERVICE_NAME=movie-chatbot
+ENV OTEL_TRACES_EXPORTER=otlp
+ENV OTEL_EXPORTER_OTLP_ENDPOINT=https://telemetry.googleapis.com
 
 # Run the app when the container launches
 CMD ["npm", "start"]
