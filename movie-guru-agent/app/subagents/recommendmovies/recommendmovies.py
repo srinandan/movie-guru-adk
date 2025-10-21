@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 from google.adk.agents import Agent
 from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import SseConnectionParams
@@ -23,7 +24,7 @@ from typing import Optional
 from google.genai import types
 from app.utils.model import get_model
 from app.utils.envvars import MCPTOOLSET, USER
-from app.utils.context import user_id_context
+from app.utils.context import session_user_id
 
 from app.subagents.userprofile.userprofile import get_user_profile_agent
 from app.utils.model_armor import sanitize_user_prompt
@@ -39,9 +40,7 @@ def get_mcp_url() -> str:
 
 def get_user() -> str | None:
     """ Returns the user id """
-    if user_id_context.get() is not None:
-        return user_id_context.get()    
-    return USER
+    return session_user_id
 
 
 def before_model_callback(
@@ -83,6 +82,12 @@ def before_model_callback(
 
 def get_recommender_agent() -> Agent:
     """Creates and returns the recommender agent."""
+    
+    mcp_url = get_mcp_url()
+    user_id = get_user()
+    
+    print(f"MCP URL: {mcp_url}")
+    print(f"User ID: {user_id}")
 
     user_profile_agent = get_user_profile_agent()
 
@@ -96,7 +101,7 @@ def get_recommender_agent() -> Agent:
                      AgentTool(agent=user_profile_agent),
                      load_memory,
                      MCPToolset(connection_params=SseConnectionParams(
-                         url=get_mcp_url(), headers={"x-user-id":
-                                                     get_user()}), )
+                         url=mcp_url, headers={"x-user-id":
+                                                     user_id}), errlog=logging)
                  ],
                  output_key="recommenderOutput")

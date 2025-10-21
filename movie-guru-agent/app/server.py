@@ -30,10 +30,18 @@ from google.adk.events import Event
 from opentelemetry import trace
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider, export
+from google.auth.transport import requests
+from google.auth.transport.grpc import AuthMetadataPlugin
+import grpc
 
 from app.utils.gcs import create_bucket_if_not_exists
-from app.utils.context import user_id_context
+from app.utils.context import user_id_context, session_user_id
 from app.utils.tracing import CloudTraceLoggingSpanExporter
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
+    OTLPSpanExporter,
+)
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from app.utils.typing import Feedback
 from app.utils.envvars import PROJECT_ID, REGION, DB_HOST, DB_NAME, DB_PASSWORD, POSTER_DIRECTORY
 from app.utils.logging import logger
@@ -48,12 +56,39 @@ create_bucket_if_not_exists(bucket_name=bucket_name,
 
 posters_bucket_name = f"{PROJECT_ID}_posters"
 
+os.environ['GOOGLE_CLOUD_QUOTA_PROJECT']=f"{PROJECT_ID}"
+os.environ['OTEL_RESOURCE_ATTRIBUTES'] = f"gcp.project_id={PROJECT_ID}"
+os.environ['OTEL_SERVICE_NAME']="movie-guru-agent"
+os.environ['OTEL_TRACES_EXPORTER']="otlp"
+os.environ['OTEL_EXPORTER_OTLP_ENDPOINT']="https://telemetry.googleapis.com"
+
 # Define the service name
 resource = Resource(attributes={SERVICE_NAME: "movie-guru-agent"})
+
+# Set up OpenTelemetry Python SDK
+# Retrieve and store Google application-default credentials
+credentials, project_id = auth.default()
+# Request used to refresh credentials upon expiry
+request = auth.transport.requests.Request()
+
+# Supply the request and credentials to AuthMetadataPlugin
+# AuthMeatadataPlugin inserts credentials into each request
+auth_metadata_plugin = AuthMetadataPlugin(
+    credentials=credentials, request=request
+)
+
+# Initialize gRPC channel credentials using the AuthMetadataPlugin
+channel_creds = grpc.composite_channel_credentials(
+    grpc.ssl_channel_credentials(),
+    grpc.metadata_call_credentials(auth_metadata_plugin),
+)
+
+otlp_grpc_exporter = OTLPSpanExporter(credentials=channel_creds)
 
 # Initialize TracerProvider with the defined resource
 provider = TracerProvider(resource=resource)
 processor = export.BatchSpanProcessor(CloudTraceLoggingSpanExporter())
+# processor = BatchSpanProcessor(otlp_grpc_exporter)
 provider.add_span_processor(processor)
 trace.set_tracer_provider(provider)
 
@@ -90,11 +125,11 @@ app: FastAPI = get_fast_api_app(
     session_service_uri=SESSION_DB_URL,
     allow_origins=allow_origins,
     trace_to_cloud=True,
+    otel_to_cloud=False,
     lifespan=lifespan,
 )
 
 app.title = "movie-guru-agent"
-
 
 @app.middleware("http")
 async def add_root_span_for_request(request: Request, call_next):
@@ -111,6 +146,7 @@ async def add_root_span_for_request(request: Request, call_next):
         user_email = request.headers.get("x-goog-authenticated-user-email")
         if user_email:
             user_id = user_email.split(":")[-1]
+            session_user_id = user_id
 
     token = user_id_context.set(user_id)
     logger.log(f"User ID set in context: {user_id}")
