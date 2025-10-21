@@ -36,6 +36,7 @@ MODEL_ARMOR_TEMPLATE = os.environ.setdefault("MODEL_ARMOR_TEMPLATE",
                                              "movie-guru")
 POSTER_DIRECTORY = os.environ.setdefault("POSTER_DIRECTORY", "/mnt")
 
+A2A_CONV_AGENT = os.environ.setdefault("A2A_CONV_AGENT", "localhost:8083")
 
 def get_gcp_project_number() -> str | None:
     """
@@ -64,5 +65,5 @@ def get_gcp_project_number() -> str | None:
 
 PROJECT_NUMBER = get_gcp_project_number()
 MCPTOOLSET = os.environ.setdefault(
-    f"MCPTOOLSET_URL",
-    "movie-guru-mcp-server-{PROJECT_NUMBER}.{REGION}.run.app")
+    "MCPTOOLSET_URL",
+    f"movie-guru-mcp-server-{PROJECT_NUMBER}.{REGION}.run.app")
