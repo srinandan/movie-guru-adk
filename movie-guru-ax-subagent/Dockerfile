@@ -21,6 +21,11 @@ COPY ./pyproject.toml ./uv.lock* ./*.py ./
 
 RUN uv sync --frozen
 
+ENV OTEL_SERVICE_NAME=conversation-analysis-agent
+ENV OTEL_TRACES_EXPORTER=otlp
+ENV OTEL_EXPORTER_OTLP_ENDPOINT=https://telemetry.googleapis.com
+
+
 EXPOSE 8080
 
 CMD ["uv", "run", ".", "--host", "0.0.0.0", "--port", "8080"]

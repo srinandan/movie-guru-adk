@@ -23,12 +23,21 @@ from a2a.server.request_handlers import DefaultRequestHandler
 from a2a.server.tasks import InMemoryTaskStore
 from a2a.types import AgentCapabilities, AgentCard, AgentSkill
 from agent_executor import ConversationAnalysisAgentExecutor
-from tracing import CloudTraceLoggingSpanExporter
-from opentelemetry import trace
 from opentelemetry.instrumentation.starlette import StarletteInstrumentor
+from google.cloud import resourcemanager_v3
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
+    OTLPSpanExporter,
+)
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
-from opentelemetry.sdk.trace import TracerProvider, export
+
 import google.auth
+import google.auth.transport.grpc
+import google.auth.transport.requests
+import grpc
+from google.auth.transport.grpc import AuthMetadataPlugin
 
 
 logger = logging.getLogger(__name__)
@@ -40,12 +49,78 @@ PROJECT_ID = os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
 REGION = os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "us-central1")
 VERTEX_AI = os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
 
+os.environ['GOOGLE_CLOUD_QUOTA_PROJECT']=f"{PROJECT_ID}"
+os.environ['OTEL_RESOURCE_ATTRIBUTES'] = f"gcp.project_id={PROJECT_ID}"
+
+# Define the service name
+resource = Resource.create(
+    attributes={
+        # Use the PID as the service.instance.id to avoid duplicate timeseries
+        # from different Gunicorn worker processes.
+        SERVICE_NAME: "conversation-analysis-agent",
+    }
+)
+
+# Set up OpenTelemetry Python SDK
+# Retrieve and store Google application-default credentials
+credentials, project_id = google.auth.default()
+# Request used to refresh credentials upon expiry
+request = google.auth.transport.requests.Request()
+
+# Supply the request and credentials to AuthMetadataPlugin
+# AuthMeatadataPlugin inserts credentials into each request
+auth_metadata_plugin = AuthMetadataPlugin(
+    credentials=credentials, request=request
+)
+
+# Initialize gRPC channel credentials using the AuthMetadataPlugin
+channel_creds = grpc.composite_channel_credentials(
+    grpc.ssl_channel_credentials(),
+    grpc.metadata_call_credentials(auth_metadata_plugin),
+)
+
+otlp_grpc_exporter = OTLPSpanExporter(credentials=channel_creds)
+
+# Initialize OpenTelemetry TracerProvider
+tracer_provider = TracerProvider(resource=resource)
+processor = BatchSpanProcessor(otlp_grpc_exporter)
+tracer_provider.add_span_processor(processor)
+trace.set_tracer_provider(tracer_provider)
+
+def get_gcp_project_number() -> str | None:
+    """
+    Retrieves the GCP Project Number given a Project ID.
+
+    Args:
+        project_id (str): The Google Cloud Project ID (e.g., "my-project-123").
+
+    Returns:
+        str or None: The Project Number as a string, or None if the project
+                     is not found or an error occurs.
+    """
+    try:
+        client = resourcemanager_v3.ProjectsClient()
+        request = resourcemanager_v3.GetProjectRequest(
+            name=f"projects/{PROJECT_ID}")
+        project = client.get_project(request=request)
+
+        # The project number is part of the 'name' attribute in the format "projects/PROJECT_NUMBER"
+        project_number = project.name.split('/')[-1]
+        return project_number
+    except Exception as e:
+        print(f"Error getting project number for ID '{PROJECT_ID}': {e}")
+        return None
+
+
+PROJECT_NUMBER = get_gcp_project_number()
+
+CLOUD_RUN = f"https://conversation-analysis-agent-{PROJECT_NUMBER}.{REGION}.run.app"
 
 @click.command()
 @click.option('--host', 'host', default='localhost')
 @click.option('--port', 'port', default=8080)
 def main(host: str, port: int):
-    """A2A Telemetry Sample GRPC Server."""
+    """A2A Server."""
 
     skill = AgentSkill(
             id='get_analysis',
@@ -62,27 +137,16 @@ def main(host: str, port: int):
     agent_card = AgentCard(
         name='Conversation Analysis Agent',
         description='Agent to analyze the conversation between the user and agent',
-        url=f'http://{host}:{port}/',
+        url=f'{CLOUD_RUN}',
         version='1.0.0',
         default_input_modes=['text'],
-        default_output_modes=['text'],
+        default_output_modes=['application/json'],
         capabilities=AgentCapabilities(streaming=True),
         skills=[skill],
     )
     request_handler = DefaultRequestHandler(
         agent_executor=agent_executor, task_store=InMemoryTaskStore()
     )
-
-
-    # Define the service name
-    resource = Resource(attributes={SERVICE_NAME: "conversation-analysis-agent"})
-
-    # Initialize TracerProvider with the defined resource
-    provider = TracerProvider(resource=resource)
-    processor = export.BatchSpanProcessor(CloudTraceLoggingSpanExporter())
-    provider.add_span_processor(processor)
-    trace.set_tracer_provider(provider)
-
 
     server = A2AStarletteApplication(agent_card, request_handler)
     starlette_app = server.build()
