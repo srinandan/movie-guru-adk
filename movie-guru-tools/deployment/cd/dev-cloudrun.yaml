@@ -59,7 +59,7 @@ steps:
       - "movie-guru-chat-server-sa@${PROJECT_ID}.iam.gserviceaccount.com"
       - "--session-affinity"
       - "--set-env-vars"
-      - "DB_HOST=${_DB_HOST},BUCKET_NAME=${_BUCKET_NAME}"
+      - "DB_HOST=${_DB_HOST},BUCKET_NAME=${_BUCKET_NAME},OTEL_SERVICE_NAME=movie-guru-mcp-server,GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GOOGLE_CLOUD_LOCATION=${_REGION}"
       - "--network"
       - "movie-guru-network"
       - "--subnet"

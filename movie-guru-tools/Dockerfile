@@ -50,6 +50,11 @@ RUN --mount=type=cache,target=/.cache/uv \
 RUN --mount=type=cache,target=/.cache/uv \
     uv sync --frozen --no-dev
 
+ENV OTEL_SERVICE_NAME=movie-guru-mcp-server
+ENV OTEL_TRACES_EXPORTER=otlp
+ENV OTEL_EXPORTER_OTLP_ENDPOINT=https://telemetry.googleapis.com
+
+
 EXPOSE 8080
 
 CMD ["uv", "run", "-m", "app.server"]
