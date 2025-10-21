@@ -21,4 +21,7 @@ import { nodePolyfills } from 'vite-plugin-node-polyfills';
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [vue(),nodePolyfills()],
+  define: {
+    'import.meta.env.VITE_OTLP_EXPORTER_URL': JSON.stringify(process.env.VITE_OTLP_EXPORTER_URL),
+  },
 })

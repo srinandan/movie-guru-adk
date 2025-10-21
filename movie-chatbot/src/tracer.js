@@ -1,38 +1,27 @@
-import * as opentelemetry from '@opentelemetry/sdk-node';
-import {
-  getNodeAutoInstrumentations,
-  getResourceDetectors as getResourceDetectorsFromEnv,
-} from '@opentelemetry/auto-instrumentations-node';
 
+import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
+import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
+import { registerInstrumentations } from '@opentelemetry/instrumentation';
+import { FetchInstrumentation } from '@opentelemetry/instrumentation-fetch';
+import { Resource } from '@opentelemetry/resources';
+import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
 
-// [START opentelemetry_instrumentation_setup_opentelemetry]
+const exporter = new OTLPTraceExporter({
+  url: import.meta.env.VITE_OTLP_EXPORTER_URL,
+});
 
-
-const sdk = new opentelemetry.NodeSDK({
-  instrumentations: getNodeAutoInstrumentations({
-    // Disable noisy instrumentations
-    '@opentelemetry/instrumentation-fs': {enabled: false},
+const provider = new WebTracerProvider({
+  resource: new Resource({
+    [ATTR_SERVICE_NAME]: 'movie-chatbot',
   }),
-  resourceDetectors: getResourceDetectorsFromEnv(),
+  spanProcessors: [new BatchSpanProcessor(exporter)],
 });
 
-try {
-  sdk.start();
-  diag.info('OpenTelemetry automatic instrumentation started successfully');
-} catch (error) {
-  diag.error(
-    'Error initializing OpenTelemetry SDK. Your application is not instrumented and will not produce telemetry',
-    error
-  );
-}
+provider.register();
 
-// Gracefully shut down the SDK to flush telemetry when the program exits
-process.on('SIGTERM', () => {
-  sdk
-    .shutdown()
-    .then(() => diag.debug('OpenTelemetry SDK terminated'))
-    .catch(error => diag.error('Error terminating OpenTelemetry SDK', error));
+registerInstrumentations({
+  instrumentations: [
+    new FetchInstrumentation(),
+  ],
 });
-// [END opentelemetry_instrumentation_setup_opentelemetry]
-
-export default sdk;

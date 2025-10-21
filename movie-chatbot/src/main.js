@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-// import './tracer';
+import './tracer';
 
 import { createApp } from 'vue'
 import './style.css'

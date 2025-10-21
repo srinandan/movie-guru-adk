@@ -15,180 +15,191 @@
 -->
 
 
-<script setup>
+<script>
 import { ref, onMounted, reactive, nextTick } from 'vue';
-// import sdk from './tracer';
-// import { SpanStatusCode } from '@opentelemetry/api';
 
-const apiBaseUrl = "https://movieguruagent.endpoints.srinandans-next25-demo.cloud.goog";
+export default {
+  setup() {
+    const apiBaseUrl = "https://movieguruagent.endpoints.srinandans-next25-demo.cloud.goog";
 
-const sessionId = ref(null);
-const sessionUserId = ref(null);
-const messages = ref([]);
-const userInput = ref('');
-const featuredMovies = ref([]);
+    const sessionId = ref(null);
+    const sessionUserId = ref(null);
+    const messages = ref([]);
+    const userInput = ref('');
+    const featuredMovies = ref([]);
 
-onMounted(async () => {
-  //const span = sdk.startSpan('onMounted');
-  try {
-    // Fetch featured movies
-    const featuredMoviesResponse = await fetch(`${apiBaseUrl}/random?t=${Date.now()}`);
-    if (featuredMoviesResponse.ok) {
-      const featuredMoviesData = await featuredMoviesResponse.json();
-      featuredMovies.value = featuredMoviesData.map(movie => ({ name: movie.title, poster: movie.poster }));
-    } else {
-      console.error('Failed to fetch featured movies:', featuredMoviesResponse.statusText);
-      // span.setStatus({ code: SpanStatusCode.ERROR, message: 'Failed to fetch featured movies' });
-    }
-
-    // Create session
-    const sessionResponse = await fetch(`${apiBaseUrl}/sessions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        //TODO: replace later
-        //'x-goog-authenticated-user-email': 'example@google.com',
-      },
-      body: JSON.stringify({
-        state: {
-          login: true
-        }
-      }),
-    });
-    const data = await sessionResponse.json();
-    sessionId.value = data.session_id;
-    sessionUserId.value = data.user_id;
-    messages.value.push({ author: 'system', text: 'Session created. How can I help you today?' });
-    //span.setStatus({ code: SpanStatusCode.OK });
-  } catch (error) {
-    console.error('Error creating session:', error);
-    messages.value.push({ author: 'system', text: 'Error creating session. Please refresh the page.' });
-    //span.setStatus({ code: SpanStatusCode.ERROR, message: error.message });
-  } finally {
-    //span.end();
-  }
-});
-
-const sendMessage = async () => {
-  if (!userInput.value.trim() || !sessionId.value || !sessionUserId.value) return;
-
-  const userMessage = userInput.value;
-  messages.value.push({ author: 'user', text: userMessage });
-  userInput.value = '';
-
-  const agentMessage = reactive({ author: 'agent', text: 'Typing...' });
-  messages.value.push(agentMessage);
-
-  const payload = {
-    appName: 'app',
-    userId: sessionUserId.value,//'example@google.com',
-    sessionId: sessionId.value,
-    newMessage: {
-      role: 'user',
-      parts: [
-        {
-          text: userMessage,
-        },
-      ],
-    },
-    streaming: false,
-  };
-
-  try {
-    const response = await fetch(`${apiBaseUrl}/run`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        //TODO: replace later
-        //'x-goog-authenticated-user-email': 'example@google.com',
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (response.status === 422) {
-        const errorText = await response.text();
-        console.error('Error sending message: 422 Unprocessable Entity', errorText);
-        agentMessage.text = `Error sending message: ${errorText}`;
-        return;
-    }
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    agentMessage.text = '';
-
-    if (Array.isArray(data)) {
-      let movieDataFound = false;
-      for (const item of data) {
-        if (item.content && item.content.parts) {
-          for (const part of item.content.parts) {
-            if (part.functionResponse && part.functionResponse.name === 'search_movies_by_embedding') {
-              const movies = JSON.parse(part.functionResponse.response.result.content[0].text);
-              if (movies && movies.length > 0) {
-                agentMessage.text = 'Here are some movies you might like:';
-                movies.forEach(movie => {
-                  messages.value.push({
-                    author: 'movie',
-                    name: movie.title,
-                    poster: movie.poster,
-                    released: movie.released,
-                    rating: movie.rating,
-                    plot: movie.plot
-                  });
-                });
-                movieDataFound = true;
-                break; 
-              }
-            } else if (part.text && part.text.includes('"movies"')) {
-              const jsonString = part.text.replace(/```json\n|```/g, '');
-              try {
-                const movieData = JSON.parse(jsonString);
-                if (movieData.movies) {
-                  agentMessage.text = 'Here are some movies you might like:';
-                  movieData.movies.forEach(movie => {
-                    messages.value.push({
-                      author: 'movie',
-                      ...movie
-                    });
-                  });
-                  movieDataFound = true;
-                  break;
-                }
-              } catch (e) {
-                console.error('Error parsing movie JSON:', e);
-                agentMessage.text = "Sorry, I couldn't parse the movie recommendations.";
-              }
-            }
+    onMounted(async () => {
+      try {
+        // Fetch featured movies
+        const featuredMoviesResponse = await fetch(`${apiBaseUrl}/random?t=${Date.now()}`);
+        if (featuredMoviesResponse.ok) {
+          const featuredMoviesData = await featuredMoviesResponse.json();
+          if (Array.isArray(featuredMoviesData)) {
+            featuredMovies.value = featuredMoviesData.map(movie => ({ name: movie.title, poster: movie.poster }));
           }
+        } else {
+          console.error('Failed to fetch featured movies:', featuredMoviesResponse.statusText);
         }
-        if (movieDataFound) break;
+      } catch (error) {
+        console.error('Error fetching featured movies:', error);
       }
 
-      if (!movieDataFound) {
-        const lastMessage = data[data.length - 1];
-        if (lastMessage && lastMessage.content && lastMessage.content.parts && lastMessage.content.parts.length > 0 && lastMessage.content.parts[0].text) {
-          agentMessage.text = lastMessage.content.parts[0].text;
+      try {
+        // Create session
+        const sessionResponse = await fetch(`${apiBaseUrl}/sessions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            //TODO: replace later
+            //'x-goog-authenticated-user-email': 'example@google.com',
+          },
+          body: JSON.stringify({
+            state: {
+              login: true
+            }
+          }),
+        });
+        const data = await sessionResponse.json();
+        sessionId.value = data.session_id;
+        sessionUserId.value = data.user_id;
+        messages.value.push({ author: 'system', text: 'Session created. How can I help you today?' });
+      } catch (error) {
+        console.error('Error creating session:', error);
+        messages.value.push({ author: 'system', text: 'Error creating session. Please refresh the page.' });
+      }
+    });
+
+    const sendMessage = async () => {
+      if (!userInput.value.trim() || !sessionId.value || !sessionUserId.value) return;
+
+      const userMessage = userInput.value;
+      messages.value.push({ author: 'user', text: userMessage });
+      userInput.value = '';
+
+      const agentMessage = reactive({ author: 'agent', text: 'Typing...' });
+      messages.value.push(agentMessage);
+
+      const payload = {
+        appName: 'app',
+        userId: sessionUserId.value,//'example@google.com',
+        sessionId: sessionId.value,
+        newMessage: {
+          role: 'user',
+          parts: [
+            {
+              text: userMessage,
+            },
+          ],
+        },
+        streaming: false,
+      };
+
+      try {
+        const response = await fetch(`${apiBaseUrl}/run`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            //TODO: replace later
+            //'x-goog-authenticated-user-email': 'example@google.com',
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (response.status === 422) {
+            const errorText = await response.text();
+            console.error('Error sending message: 422 Unprocessable Entity', errorText);
+            agentMessage.text = `Error sending message: ${errorText}`;
+            return;
+        }
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        agentMessage.text = '';
+
+        if (Array.isArray(data)) {
+          let movieDataFound = false;
+          for (const item of data) {
+            if (item.content && item.content.parts) {
+              for (const part of item.content.parts) {
+                if (part.functionResponse && part.functionResponse.name === 'search_movies_by_embedding') {
+                  const movies = JSON.parse(part.functionResponse.response.result.content[0].text);
+                  if (movies && movies.length > 0) {
+                    agentMessage.text = 'Here are some movies you might like:';
+                    movies.forEach(movie => {
+                      messages.value.push({
+                        author: 'movie',
+                        name: movie.title,
+                        poster: movie.poster,
+                        released: movie.released,
+                        rating: movie.rating,
+                        plot: movie.plot
+                      });
+                    });
+                    movieDataFound = true;
+                    break; 
+                  }
+                } else if (part.text && part.text.includes('"movies"')) {
+                  const jsonString = part.text.replace(/```json\n|```/g, '');
+                  try {
+                    const movieData = JSON.parse(jsonString);
+                    if (movieData.movies) {
+                      agentMessage.text = 'Here are some movies you might like:';
+                      movieData.movies.forEach(movie => {
+                        messages.value.push({
+                          author: 'movie',
+                          ...movie
+                        });
+                      });
+                      movieDataFound = true;
+                      break;
+                    }
+                  } catch (e) {
+                    console.error('Error parsing movie JSON:', e);
+                    agentMessage.text = "Sorry, I couldn't parse the movie recommendations.";
+                  }
+                }
+              }
+            }
+            if (movieDataFound) break;
+          }
+
+          if (!movieDataFound) {
+            const lastMessage = data[data.length - 1];
+            if (lastMessage && lastMessage.content && lastMessage.content.parts && lastMessage.content.parts.length > 0 && lastMessage.content.parts[0].text) {
+              agentMessage.text = lastMessage.content.parts[0].text;
+            } else {
+              agentMessage.text = "Sorry, I didn't get a response. Please try again.";
+            }
+          }
+        } else if (data.content && data.content.parts && data.content.parts.length > 0) {
+          const part = data.content.parts[0];
+          if (part.text) {
+            agentMessage.text = part.text;
+          }
         } else {
           agentMessage.text = "Sorry, I didn't get a response. Please try again.";
         }
-      }
-    } else if (data.content && data.content.parts && data.content.parts.length > 0) {
-      const part = data.content.parts[0];
-      if (part.text) {
-        agentMessage.text = part.text;
-      }
-    } else {
-      agentMessage.text = "Sorry, I didn't get a response. Please try again.";
-    }
-    await nextTick();
+        await nextTick();
 
-  } catch (error) {
-    console.error('Error sending message:', error);
-    agentMessage.text = 'Error sending message. Please try again.';
-  }
+      } catch (error) {
+        console.error('Error sending message:', error);
+        agentMessage.text = 'Error sending message. Please try again.';
+      }
+    };
+
+    return {
+      sessionId,
+      sessionUserId,
+      messages,
+      userInput,
+      featuredMovies,
+      sendMessage,
+    };
+  },
 };
 </script>
 
