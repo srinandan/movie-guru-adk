@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import json
+import logging
 import datetime
 import vertexai
 from vertexai.language_models import TextEmbeddingInput, TextEmbeddingModel
@@ -24,12 +25,28 @@ from google.cloud import storage
 
 from fastmcp import FastMCP
 from fastmcp.server.dependencies import get_http_headers
+from fastmcp.server.middleware import Middleware, MiddlewareContext
+from fastmcp.exceptions import ToolError
 
 from google import auth
 from google.auth.transport import requests
+from google.auth.transport.grpc import AuthMetadataPlugin
 from google.auth import default, compute_engine
+import grpc
+
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
+    OTLPSpanExporter,
+)
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 
 mcp = FastMCP("Movie Guru Tools")
+
+_, project_id = auth.default()
+PROJECT_ID = os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
+
 
 # Initialize Vertex AI
 vertexai.init(project=os.getenv("GOOGLE_CLOUD_PROJECT"),
@@ -42,12 +59,71 @@ top_k = 5
 
 conn = None
 
+os.environ['GOOGLE_CLOUD_QUOTA_PROJECT']=f"{PROJECT_ID}"
+os.environ['OTEL_RESOURCE_ATTRIBUTES'] = f"gcp.project_id={PROJECT_ID}"
+os.environ['OTEL_SERVICE_NAME']="movie-guru-mcp-server"
+os.environ['OTEL_TRACES_EXPORTER']="otlp"
+os.environ['OTEL_EXPORTER_OTLP_ENDPOINT']="https://telemetry.googleapis.com"
+
+# Define the service name
+resource = Resource.create(
+    attributes={
+        SERVICE_NAME: "movie-guru-mcp-server",
+    }
+)
+
+# Set up OpenTelemetry Python SDK
+# Retrieve and store Google application-default credentials
+credentials, project_id = auth.default()
+# Request used to refresh credentials upon expiry
+request = auth.transport.requests.Request()
+
+# Supply the request and credentials to AuthMetadataPlugin
+# AuthMeatadataPlugin inserts credentials into each request
+auth_metadata_plugin = AuthMetadataPlugin(
+    credentials=credentials, request=request
+)
+
+# Initialize gRPC channel credentials using the AuthMetadataPlugin
+channel_creds = grpc.composite_channel_credentials(
+    grpc.ssl_channel_credentials(),
+    grpc.metadata_call_credentials(auth_metadata_plugin),
+)
+
+otlp_grpc_exporter = OTLPSpanExporter(credentials=channel_creds)
+
+# Initialize OpenTelemetry TracerProvider
+tracer_provider = TracerProvider(resource=resource)
+processor = BatchSpanProcessor(otlp_grpc_exporter)
+tracer_provider.add_span_processor(processor)
+trace.set_tracer_provider(tracer_provider)
+
 bucket_name = os.getenv("BUCKET_NAME")
 if not bucket_name:
     gcp_project = os.getenv("GOOGLE_CLOUD_PROJECT")
     if gcp_project:
         bucket_name = f"{gcp_project}_posters"
 
+class TraceMiddleware(Middleware):
+    async def on_call_tool(self, context: MiddlewareContext, call_next):
+
+        tool_name = context.message.name
+
+        # The tracer name can be any string. Using the module name is a common practice.
+        tracer = trace.get_tracer(__name__)
+        span_name = tool_name
+
+        with tracer.start_as_current_span(span_name) as span:
+            # Add attributes to the span for more context in Cloud Trace.
+            span.set_attribute("context.method", str(context.method))
+            span.set_attribute("context.name", str(context.message.name))
+            span.set_attribute("context.type", str(context.type))
+            span.set_attribute("service.name", "movie-guru-mcp-server")
+            # Allow other tools to proceed
+            return await call_next(context)
+
+
+mcp.add_middleware(TraceMiddleware())
 
 def connect_to_movie_db(dbname: str,
                         user: str,
