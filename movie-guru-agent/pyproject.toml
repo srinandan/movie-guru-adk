@@ -6,10 +6,10 @@ authors = [
     {name = "Nandan Sridhar", email = "srinandans@google.com"},
 ]
 dependencies = [
-    "google-adk[a2a,litellm]>1.4.2",
+    "google-adk[a2a,litellm]>=1.16.0",
     "opentelemetry-exporter-gcp-trace~=1.9.0",
     "google-cloud-logging~=3.11.4",
-    "google-cloud-aiplatform[evaluation]~=1.95.1",
+    "google-cloud-aiplatform[agent-engines,evaluation]==1.112.0",
     "fastapi~=0.115.8",
     "uvicorn~=0.34.0",
     "google-cloud-modelarmor>=0.2.5",
@@ -17,6 +17,7 @@ dependencies = [
     "absl-py>=2.3.0",
     "pg8000>=1.31.2",
     "psycopg2-binary>=2.9.11",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.37.0",
 ]
 
 requires-python = ">=3.10,<3.14"

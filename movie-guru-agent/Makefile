@@ -24,7 +24,7 @@ backend:
 	--memory 1Gi \
 	--concurrency 10 \
 	--service-account movie-guru-chat-server-sa@${PROJECT_ID}.iam.gserviceaccount.com \
-	--set-env-vars MCPTOOLSET_URL="movie-guru-mcp-server-${PROJECT_NUMBER}.${REGION}.run.app,GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GOOGLE_CLOUD_LOCATION=${REGION},MODEL=gemini-2.5-flash,DB_HOST=10.2.0.2,ALLOW_ORIGINS=*" \
+	--set-env-vars MCPTOOLSET_URL="movie-guru-mcp-server-${PROJECT_NUMBER}.${REGION}.run.app,GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GOOGLE_CLOUD_LOCATION=${REGION},MODEL=gemini-2.5-flash,DB_HOST=10.2.0.2,ALLOW_ORIGINS=*,A2A_CONV_AGENT=conversation-analysis-agent-${PROJECT_NUMBER}.${REGION}.run.app" \
 	--startup-probe="initialDelaySeconds=30,tcpSocket.port=8080,timeoutSeconds=240,periodSeconds=240,failureThreshold=1" \
 	--max-instances 1 \
 	--allow-unauthenticated \

@@ -53,7 +53,7 @@ steps:
       - "--service-account" 
       - "movie-guru-chat-server-sa@${PROJECT_ID}.iam.gserviceaccount.com"
       - "--set-env-vars" 
-      - 'MCPTOOLSET_URL="movie-guru-mcp-server-${PROJECT_NUMBER}.us-central1.run.app",GOOGLE_CLOUD_PROJECT="${PROJECT_ID}",GOOGLE_CLOUD_LOCATION="us-central1",MODEL="gemini-2.5-flash",USER_ID="fake",DB_HOST="${_DB_HOST}"'
+      - 'MCPTOOLSET_URL="movie-guru-mcp-server-${PROJECT_NUMBER}.us-central1.run.app",GOOGLE_CLOUD_PROJECT="${PROJECT_ID}",GOOGLE_CLOUD_LOCATION="us-central1",MODEL="gemini-2.5-flash",USER_ID="fake",DB_HOST="${_DB_HOST}",A2A_CONV_AGENT="conversation-analysis-agent-${PROJECT_NUMBER}.us-central1.run.app"'
       - "--startup-probe"
       - 'initialDelaySeconds=30,tcpSocket.port=8080,timeoutSeconds=240,periodSeconds=240,failureThreshold=1'
       - "--max-instances" 
