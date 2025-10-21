@@ -175,6 +175,8 @@ export default {
               agentMessage.text = "Sorry, I didn't get a response. Please try again.";
             }
           }
+        } else if (data.response) {
+          agentMessage.text = data.response;
         } else if (data.content && data.content.parts && data.content.parts.length > 0) {
           const part = data.content.parts[0];
           if (part.text) {
@@ -250,13 +252,15 @@ export default {
 <style scoped>
 #main-container {
   display: flex;
+  background-color: var(--background-color);
+  color: var(--text-color);
 }
 
 #user-info {
   position: absolute;
   top: 1rem;
   right: 1rem;
-  background-color: #f1f0f0;
+  background-color: var(--card-background-color);
   padding: 0.5rem 1rem;
   border-radius: 8px;
 }
@@ -264,7 +268,7 @@ export default {
 #featured-movies-container {
   width: 25%;
   padding: 2rem;
-  border-right: 1px solid #ccc;
+  border-right: 1px solid var(--border-color);
 }
 
 .featured-movie-card {
@@ -296,9 +300,10 @@ export default {
   flex-direction: column;
   height: 75vh; /* Reduced height */
   width: 100%; /* Full width of the app container */
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   overflow: hidden;
+  background-color: var(--card-background-color);
 }
 
 #chat-window {
@@ -319,17 +324,18 @@ export default {
 .user {
   background-color: #dcf8c6;
   align-self: flex-end;
+  color: #000;
 }
 
 .agent {
-  background-color: #f1f0f0;
+  background-color: var(--card-background-color);
   align-self: flex-start;
   display: flex;
   align-items: center;
 }
 
 .system {
-  background-color: #f0f0f0;
+  background-color: var(--card-background-color);
   align-self: center;
   text-align: center;
   font-style: italic;
@@ -338,14 +344,16 @@ export default {
 #input-container {
   display: flex;
   padding: 1rem;
-  border-top: 1px solid #ccc;
+  border-top: 1px solid var(--border-color);
 }
 
 input {
   flex-grow: 1;
   padding: 0.5rem;
-  border: 1px solid #ccc;
+  border: 1px solid var(--input-border-color);
   border-radius: 4px;
+  background-color: var(--input-background-color);
+  color: var(--input-text-color);
 }
 
 button {
@@ -374,6 +382,9 @@ img {
 .movie-card {
   display: flex;
   gap: 1rem;
+  background-color: var(--card-background-color);
+  padding: 1rem;
+  border-radius: 8px;
 }
 
 .movie-card img {
