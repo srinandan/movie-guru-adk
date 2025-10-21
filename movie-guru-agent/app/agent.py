@@ -14,13 +14,14 @@
 
 from google.adk.agents import SequentialAgent
 from app.subagents.recommendmovies.recommendmovies import get_recommender_agent
-
+from app.subagents.conversation_analysis.conversation_analysis import get_conversation_analysis_agent
 
 def get_agent() -> SequentialAgent:
     """Creates and returns the movie guru agent."""
     return SequentialAgent(
         name="movie_guru_agent",
         sub_agents=[
+            get_conversation_analysis_agent(),
             get_recommender_agent(),
         ],
         description=
