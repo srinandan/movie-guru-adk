@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import logging
+from typing import Optional, Dict, Any
+
 from google.adk.agents import Agent
 from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import SseConnectionParams
@@ -20,11 +22,13 @@ from google.adk.tools.agent_tool import AgentTool
 from google.adk.tools import load_memory  # Tool to query memory
 from google.adk.agents.callback_context import CallbackContext
 from google.adk.models import LlmResponse, LlmRequest
-from typing import Optional
+from google.adk.tools.tool_context import ToolContext
+from google.adk.tools.base_tool import BaseTool
+
 from google.genai import types
 from app.utils.model import get_model
-from app.utils.envvars import MCPTOOLSET, USER
 from app.utils.context import user_id_context
+from app.utils.envvars import MCPTOOLSET
 
 from app.subagents.userprofile.userprofile import get_user_profile_agent
 from app.utils.model_armor import sanitize_user_prompt
@@ -36,7 +40,6 @@ from app.subagents.recommendmovies.prompt import AGENT_INSTRUCTION
 def get_mcp_url() -> str:
     """Returns the MCP URL."""
     return f"https://{MCPTOOLSET}/sse"
-
 
 def before_model_callback(
     callback_context: CallbackContext, llm_request: LlmRequest
@@ -73,15 +76,21 @@ def before_model_callback(
     else:
         # improper request not found, allow the request to proceed to the LLM
         return None # Returning None signals ADK to continue normally
-    
+
+def get_session_user_id(
+    tool: BaseTool, args: Dict[str, Any], tool_context: ToolContext
+) -> Optional[Dict]:
+    """Inspects/modifies tool args or skips the tool call."""
+    print(f"--- Callback: get_session_user_id running for agent: {tool.name}, tool: {tool_context.agent_name} ---")
+    print(f"Session user id: {user_id_context.get()}")
+    return None
 
 def get_recommender_agent() -> Agent:
     """Creates and returns the recommender agent."""
-    
+
     mcp_url = get_mcp_url()
-    
+
     print(f"MCP URL: {mcp_url}")
-    print(f"User ID: {user_id_context.get()}")
 
     user_profile_agent = get_user_profile_agent()
 
@@ -90,12 +99,13 @@ def get_recommender_agent() -> Agent:
                  description=
                  "Agent to recommend movies based on the user's preferences.",
                  before_model_callback=before_model_callback,
+                 before_tool_callback=get_session_user_id,
                  instruction=AGENT_INSTRUCTION,
                  tools=[
                      AgentTool(agent=user_profile_agent),
                      load_memory,
                      MCPToolset(connection_params=SseConnectionParams(
                          url=mcp_url, headers={"x-user-id":
-                                                     user_id_context.get()}), errlog=logging)
+                                        user_id_context.get()}), errlog=logging)
                  ],
                  output_key="recommenderOutput")
