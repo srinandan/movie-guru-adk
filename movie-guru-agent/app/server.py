@@ -41,7 +41,7 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
     OTLPSpanExporter,
 )
-from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource, SERVICE_INSTANCE_ID
 from app.utils.typing import Feedback
 from app.utils.envvars import PROJECT_ID, REGION, DB_HOST, DB_NAME, DB_PASSWORD, POSTER_DIRECTORY
 from app.utils.logging import logger
@@ -63,7 +63,7 @@ os.environ['OTEL_TRACES_EXPORTER']="otlp"
 os.environ['OTEL_EXPORTER_OTLP_ENDPOINT']="https://telemetry.googleapis.com"
 
 # Define the service name
-resource = Resource(attributes={SERVICE_NAME: "movie-guru-agent"})
+resource = Resource(attributes={SERVICE_NAME: "movie-guru-agent",SERVICE_INSTANCE_ID: f"worker-{os.getpid()}",})
 
 # Set up OpenTelemetry Python SDK
 # Retrieve and store Google application-default credentials
