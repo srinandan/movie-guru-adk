@@ -24,7 +24,7 @@ from typing import Optional
 from google.genai import types
 from app.utils.model import get_model
 from app.utils.envvars import MCPTOOLSET, USER
-from app.utils.context import session_user_id
+from app.utils.context import user_id_context
 
 from app.subagents.userprofile.userprofile import get_user_profile_agent
 from app.utils.model_armor import sanitize_user_prompt
@@ -36,11 +36,6 @@ from app.subagents.recommendmovies.prompt import AGENT_INSTRUCTION
 def get_mcp_url() -> str:
     """Returns the MCP URL."""
     return f"https://{MCPTOOLSET}/sse"
-
-
-def get_user() -> str | None:
-    """ Returns the user id """
-    return session_user_id
 
 
 def before_model_callback(
@@ -72,7 +67,7 @@ def before_model_callback(
         return LlmResponse(
             content=types.Content(
                 role="model", # Mimic a response from the agent's perspective
-                parts=[types.Part(text=f"I cannot process this request because it movie-guru-agent policies")],
+                parts=[types.Part(text="I cannot process this request because it movie-guru-agent policies")],
             )
         )
     else:
@@ -84,10 +79,9 @@ def get_recommender_agent() -> Agent:
     """Creates and returns the recommender agent."""
     
     mcp_url = get_mcp_url()
-    user_id = get_user()
     
     print(f"MCP URL: {mcp_url}")
-    print(f"User ID: {user_id}")
+    print(f"User ID: {user_id_context.get()}")
 
     user_profile_agent = get_user_profile_agent()
 
@@ -102,6 +96,6 @@ def get_recommender_agent() -> Agent:
                      load_memory,
                      MCPToolset(connection_params=SseConnectionParams(
                          url=mcp_url, headers={"x-user-id":
-                                                     user_id}), errlog=logging)
+                                                     user_id_context.get()}), errlog=logging)
                  ],
                  output_key="recommenderOutput")
