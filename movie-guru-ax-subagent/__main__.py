@@ -21,10 +21,9 @@ import uvicorn
 from a2a.server.apps import A2AStarletteApplication
 from a2a.server.request_handlers import DefaultRequestHandler
 from a2a.server.tasks import InMemoryTaskStore
-from a2a.types import AgentCapabilities, AgentCard, AgentSkill
+from agent_config import agent_card
 from agent_executor import ConversationAnalysisAgentExecutor
 from opentelemetry.instrumentation.starlette import StarletteInstrumentor
-from google.cloud import resourcemanager_v3
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -87,63 +86,13 @@ processor = BatchSpanProcessor(otlp_grpc_exporter)
 tracer_provider.add_span_processor(processor)
 trace.set_tracer_provider(tracer_provider)
 
-def get_gcp_project_number() -> str | None:
-    """
-    Retrieves the GCP Project Number given a Project ID.
-
-    Args:
-        project_id (str): The Google Cloud Project ID (e.g., "my-project-123").
-
-    Returns:
-        str or None: The Project Number as a string, or None if the project
-                     is not found or an error occurs.
-    """
-    try:
-        client = resourcemanager_v3.ProjectsClient()
-        request = resourcemanager_v3.GetProjectRequest(
-            name=f"projects/{PROJECT_ID}")
-        project = client.get_project(request=request)
-
-        # The project number is part of the 'name' attribute in the format "projects/PROJECT_NUMBER"
-        project_number = project.name.split('/')[-1]
-        return project_number
-    except Exception as e:
-        print(f"Error getting project number for ID '{PROJECT_ID}': {e}")
-        return None
-
-
-PROJECT_NUMBER = get_gcp_project_number()
-
-CLOUD_RUN = f"https://conversation-analysis-agent-{PROJECT_NUMBER}.{REGION}.run.app"
 
 @click.command()
 @click.option('--host', 'host', default='localhost')
 @click.option('--port', 'port', default=8080)
 def main(host: str, port: int):
     """A2A Server."""
-
-    skill = AgentSkill(
-            id='get_analysis',
-            name='Get Conversation Analysis',
-            description='Analyze the conversation between the user and agent.',
-            tags=['Sentiment', 'Analysis', 'Movies'],
-            examples=[
-                'I am looking for a movie with strong female characters.',
-                'I told you I am not interested in sci-fi',
-            ],
-        )
-
     agent_executor = ConversationAnalysisAgentExecutor()
-    agent_card = AgentCard(
-        name='Conversation Analysis Agent',
-        description='Agent to analyze the conversation between the user and agent',
-        url=f'{CLOUD_RUN}',
-        version='1.0.0',
-        default_input_modes=['text'],
-        default_output_modes=['application/json'],
-        capabilities=AgentCapabilities(streaming=True),
-        skills=[skill],
-    )
     request_handler = DefaultRequestHandler(
         agent_executor=agent_executor, task_store=InMemoryTaskStore()
     )
