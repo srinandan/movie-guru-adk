@@ -35,7 +35,7 @@ from google.auth.transport.grpc import AuthMetadataPlugin
 import grpc
 
 from app.utils.gcs import create_bucket_if_not_exists
-from app.utils.context import user_id_context, session_user_id
+from app.utils.context import user_id_context
 from app.utils.tracing import CloudTraceLoggingSpanExporter
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
@@ -87,8 +87,8 @@ otlp_grpc_exporter = OTLPSpanExporter(credentials=channel_creds)
 
 # Initialize TracerProvider with the defined resource
 provider = TracerProvider(resource=resource)
-processor = export.BatchSpanProcessor(CloudTraceLoggingSpanExporter())
-# processor = BatchSpanProcessor(otlp_grpc_exporter)
+#processor = export.BatchSpanProcessor(CloudTraceLoggingSpanExporter())
+processor = BatchSpanProcessor(otlp_grpc_exporter)
 provider.add_span_processor(processor)
 trace.set_tracer_provider(provider)
 
@@ -146,10 +146,7 @@ async def add_root_span_for_request(request: Request, call_next):
         user_email = request.headers.get("x-goog-authenticated-user-email")
         if user_email:
             user_id = user_email.split(":")[-1]
-            session_user_id = user_id
-
-    token = user_id_context.set(user_id)
-    logger.log(f"User ID set in context: {user_id}")
+            user_id_context.set(user_id)
 
     try:
         # The tracer name can be any string. Using the module name is a common practice.
@@ -166,7 +163,7 @@ async def add_root_span_for_request(request: Request, call_next):
             span.set_attribute("http.status_code", response.status_code)
             return response
     finally:
-        user_id_context.reset(token)
+        logger.log(f"User ID set in context: {user_id}")
 
 
 @app.post("/sessions")
