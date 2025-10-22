@@ -24,7 +24,7 @@ backend:
 		--memory 1Gi \
 		--concurrency 10 \
 		--service-account movie-guru-chat-server-sa@${PROJECT_ID}.iam.gserviceaccount.com \
-		--set-env-vars VITE_API_BASE_URL="https://movieguruagent.endpoints.srinandans-next25-demo.cloud.goog" \
+		--set-env-vars VITE_API_BASE_URL="https://movieguruagent.endpoints.srinandans-next25-demo.cloud.goog,OTEL_SERVICE_NAME=movie-chatbot" \
 		--cpu-boost \
 		--vpc-egress all \
 		--network movie-guru-network \
