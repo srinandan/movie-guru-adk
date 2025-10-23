@@ -35,7 +35,8 @@ backend:
 	--network movie-guru-network \
 	--subnet movie-guru-subnet \
 	--set-secrets="DB_PASSWORD=postgres-root-password-secret:latest" \
-	--ingress internal-and-cloud-load-balancing
+	--ingress internal-and-cloud-load-balancing \
+	--build-worker-pool="projects/srinandans-next25-demo/locations/us-central1/workerPools/movie-guru"
 agent-engine:
 	# Export dependencies to requirements file using uv export.
 	uv export --no-hashes --no-header --no-dev --no-emit-project --no-annotate --frozen > .requirements.txt 2>/dev/null || \
