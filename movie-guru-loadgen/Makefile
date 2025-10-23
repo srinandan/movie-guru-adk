@@ -31,4 +31,5 @@ backend:
 		--subnet movie-guru-subnet \
 		--max-instances 1 \
 		--min-instances 1 \
-		--ingress internal-and-cloud-load-balancing
+		--ingress internal-and-cloud-load-balancing \
+		--build-worker-pool="projects/${PROJECT_ID}/locations/${REGION}/workerPools/movie-guru"

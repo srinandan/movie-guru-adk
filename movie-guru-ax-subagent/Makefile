@@ -19,7 +19,8 @@ backend:
 	--vpc-egress private-ranges-only \
 	--network movie-guru-network \
 	--subnet movie-guru-subnet \
-	--ingress internal-and-cloud-load-balancing
+	--ingress internal-and-cloud-load-balancing \
+	--build-worker-pool="projects/${PROJECT_ID}/locations/${REGION}/workerPools/movie-guru"
 
 local-backend:
 	uv run .
