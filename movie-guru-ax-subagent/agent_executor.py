@@ -35,6 +35,7 @@ from send_metrics import record_sentiment
 from model import get_model
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 # Conversation schema
 class ConversationOutput(BaseModel):
@@ -112,8 +113,8 @@ class ConversationAnalysisAgentExecutor(AgentExecutor):
                     try:
                         # Assuming the response is in the first part and is a JSON string
                         response_json = json.loads(parts[0].text)
+                        logger.info(f"Response: {response_json}")
                         output = ConversationOutput(**response_json)
-                        logger.info(f"Outcome: {output}")
                         sentiment = output.sentiment
                         if sentiment:
                             logger.info(f"Sentiment: {sentiment}")

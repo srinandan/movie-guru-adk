@@ -23,6 +23,8 @@ GEMINI20 = "gemini-2.0-flash"
 OLLAMA_MODEL = os.environ.setdefault("OLLAMA_MODEL","ollama_chat/gemma3:4b")
 MODEL = os.environ.setdefault("MODEL", GEMINI25)
 
+os.environ["OLLAMA_API_BASE"]=API_BASE
+
 def get_model() -> Any:
     if MODEL == "ollama":
         print(f"using ollama model {OLLAMA_MODEL}")
