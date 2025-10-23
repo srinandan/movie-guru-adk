@@ -11,6 +11,7 @@ backend:
 	--concurrency 10 \
 	--service-account movie-guru-chat-server-sa@${PROJECT_ID}.iam.gserviceaccount.com \
 	--startup-probe="initialDelaySeconds=30,tcpSocket.port=8080,timeoutSeconds=240,periodSeconds=240,failureThreshold=1" \
+	--set-env-vars "GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GOOGLE_CLOUD_LOCATION=${REGION},MODEL=ollama,API_BASE=https://ollama-gemma-${PROJECT_NUMBER}.${REGION}.run.app" \
 	--max-instances 1 \
 	--allow-unauthenticated \
 	--timeout 300 \

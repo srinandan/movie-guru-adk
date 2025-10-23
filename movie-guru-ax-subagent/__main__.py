@@ -37,12 +37,14 @@ import google.auth.transport.grpc
 import google.auth.transport.requests
 import grpc
 from google.auth.transport.grpc import AuthMetadataPlugin
+from send_metrics import setup_opentelemetry
 
 
 logger = logging.getLogger(__name__)
 logging.basicConfig()
 
-_, project_id = google.auth.default()
+# Retrieve and store Google application-default credentials
+credentials, project_id = google.auth.default()
 PROJECT_ID = os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
 
 REGION = os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "us-central1")
@@ -50,6 +52,8 @@ VERTEX_AI = os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
 
 os.environ['GOOGLE_CLOUD_QUOTA_PROJECT']=f"{PROJECT_ID}"
 os.environ['OTEL_RESOURCE_ATTRIBUTES'] = f"gcp.project_id={PROJECT_ID}"
+os.environ['OTEL_EXPORTER_OTLP_ENDPOINT']="https://telemetry.googleapis.com"
+os.environ['OTEL_TRACES_EXPORTER']="otlp"
 
 # Define the service name
 resource = Resource.create(
@@ -61,8 +65,7 @@ resource = Resource.create(
 )
 
 # Set up OpenTelemetry Python SDK
-# Retrieve and store Google application-default credentials
-credentials, project_id = google.auth.default()
+
 # Request used to refresh credentials upon expiry
 request = google.auth.transport.requests.Request()
 
@@ -101,6 +104,7 @@ def main(host: str, port: int):
     starlette_app = server.build()
     # Instrument the starlette app for tracing
     StarletteInstrumentor().instrument_app(starlette_app)
+    # setup_opentelemetry()
     uvicorn.run(starlette_app, host=host, port=port)
 
 

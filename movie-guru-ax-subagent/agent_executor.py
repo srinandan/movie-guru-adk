@@ -15,6 +15,7 @@
 # agent_executor.py
 import logging
 import os
+import json
 
 from a2a.server.agent_execution import AgentExecutor, RequestContext
 from a2a.server.events import EventQueue
@@ -30,6 +31,8 @@ from google.adk import Runner
 from pydantic import BaseModel, Field
 from google.genai import types
 from prompt import AGENT_INSTRUCTION
+from send_metrics import record_sentiment
+from model import get_model
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +54,7 @@ class ConversationAnalysisAgentExecutor(AgentExecutor):
 
     def _init_agent(self):
         self.agent = LlmAgent(
-            model='gemini-2.5-flash',
+            model=get_model(),
             name="conversation_analysis_agent",
             description=
             "Agent to analyze the conversation between the user and agent",
@@ -105,6 +108,19 @@ class ConversationAnalysisAgentExecutor(AgentExecutor):
             logger.debug(f'Event from ADK {event}')
             if event.is_final_response():
                 parts = event.content.parts
+                if parts:
+                    try:
+                        # Assuming the response is in the first part and is a JSON string
+                        response_json = json.loads(parts[0].text)
+                        output = ConversationOutput(**response_json)
+                        logger.info(f"Outcome: {output}")
+                        sentiment = output.sentiment
+                        if sentiment:
+                            logger.info(f"Sentiment: {sentiment}")
+                            # record_sentiment(sentiment)
+                    except (json.JSONDecodeError, KeyError, TypeError) as e:
+                        logger.error(f"Error processing agent output: {e}")
+
                 text_parts = [
                     TextPart(text=part.text) for part in parts if part.text
                 ]

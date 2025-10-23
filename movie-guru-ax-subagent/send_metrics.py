@@ -1,77 +1,96 @@
 import os
-import time
 from typing import Literal
 
-from google.cloud import monitoring_v3
+import google.auth
+import google.auth.transport.grpc
+import google.auth.transport.requests
+import grpc
+from google.auth.transport.grpc import AuthMetadataPlugin
 
-# Define the allowed sentiment types for type hinting
+from opentelemetry import metrics
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
+from opentelemetry.sdk.resources import Resource
+
+# Define your sentiment types
 Sentiment = Literal["SENTIMENTPOSITIVE", "SENTIMENTNEGATIVE", "SENTIMENTNEUTRAL"]
 
-def send_custom_sentiment_metric(project_id: str, sentiment: Sentiment):
-    """Sends a custom sentiment metric to Google Cloud Monitoring.
+# Global variables for OpenTelemetry
+_meter_provider = None
+_sentiment_counter = None
 
-    This function sends a data point with a value of 1 for the specified
-    sentiment. The metric is a DELTA, meaning it represents the change in a
-    value over a time interval. This is ideal for counting event occurrences.
+otlp_endpoint = os.environ.get("OTLP_GRPC_ENDPOINT", "https://telemetry.googleapis.com") # http://localhost:4317
 
-    Args:
-        project_id (str): Your Google Cloud project ID.
-        sentiment (str): The sentiment to record. Must be one of
-                         'SENTIMENTPOSITIVE', 'SENTIMENTNEGATIVE', or 'SENTIMENTNEUTRAL'.
+def setup_opentelemetry():
+    """Initializes the OpenTelemetry SDK and metric exporter."""
+    global _meter_provider, _sentiment_counter
+
+    # --- 1. Configure the OTLP Exporter ---
+
+    # Retrieve and store Google application-default credentials
+    credentials, project_id = google.auth.default()
+    # Request used to refresh credentials upon expiry
+    request = google.auth.transport.requests.Request()
+
+    # AuthMeatadataPlugin inserts credentials into each request
+    auth_metadata_plugin = AuthMetadataPlugin(
+        credentials=credentials, request=request
+    )
+
+    # Initialize gRPC channel credentials using the AuthMetadataPlugin
+    channel_creds = grpc.composite_channel_credentials(
+        grpc.ssl_channel_credentials(),
+        grpc.metadata_call_credentials(auth_metadata_plugin),
+    )
+
+    # This exporter sends to the default OTLP endpoint:
+    # http://localhost:4317 (for gRPC)
+    # This is where your Ops Agent or OTel Collector should be listening.
+    exporter = OTLPMetricExporter(endpoint=otlp_endpoint, credentials=channel_creds)
+
+    # --- 2. Configure the Reader ---
+    # The reader collects metrics and exports them periodically.
+    reader = PeriodicExportingMetricReader(
+        exporter,
+        export_interval_millis=5000  # Export every 5 seconds
+    )
+
+    # --- 3. Configure the Resource ---
+    # This identifies your application in Cloud Monitoring.
+    resource = Resource(attributes={
+        "service.name": "conversation-analysis-agent"
+    })
+
+    # --- 4. Configure the MeterProvider ---
+    _meter_provider = MeterProvider(metric_readers=[reader], resource=resource)
+    metrics.set_meter_provider(_meter_provider)
+
+    # --- 5. Create the Meter and Instrument (Counter) ---
+    meter = metrics.get_meter("movie-guru.sentiment.meter", "1.0.0")
+
+    _sentiment_counter = meter.create_counter(
+        name="sentiment.analysis.count",
+        description="Counts the number of sentiment analysis results by type.",
+        unit="1"  # "1" denotes a count
+    )
+
+    print("OpenTelemetry setup complete. Exporting to OTLP endpoint (localhost:4317)...")
+
+def record_sentiment(sentiment: Sentiment):
     """
-    # Create a client for the Google Cloud Monitoring API
-    client = monitoring_v3.MetricServiceClient()
-    project_name = f"projects/{project_id}"
-
-    # Map the input sentiment to a user-friendly label
-    sentiment_map = {
-        "SENTIMENTPOSITIVE": "positive",
-        "SENTIMENTNEGATIVE": "negative",
-        "SENTIMENTNEUTRAL": "neutral",
-    }
-
-    if sentiment not in sentiment_map:
-        print(f"Error: Invalid sentiment value '{sentiment}'. Aborting.")
-        print("Please use one of 'SENTIMENTPOSITIVE', 'SENTIMENTNEGATIVE', or 'SENTIMENTNEUTRAL'.")
+    Records a single sentiment analysis result as a custom metric.
+    
+    Args:
+        sentiment: The sentiment string, must be one of the predefined types.
+    """
+    if not _sentiment_counter:
+        print("Error: OpenTelemetry is not initialized. Call setup_opentelemetry() first.")
         return
 
-    sentiment_label = sentiment_map[sentiment]
+    # These attributes become metric labels in Cloud Monitoring
+    attributes = {"sentiment_type": sentiment}
 
-    # Prepare the time series data
-    series = monitoring_v3.TimeSeries()
-
-    # Define the custom metric type and its labels
-    series.metric.type = "custom.googleapis.com/user_sentiment_count"
-    series.metric.labels["sentiment_type"] = sentiment_label
-
-    # Associate the metric with a monitored resource.
-    # Using "global" is a good default for metrics not tied to a specific VM or service.
-    series.resource.type = "global"
-    series.resource.labels["project_id"] = project_id
-
-    # The metric kind is DELTA, as we are counting individual events.
-    series.metric_kind = monitoring_v3.MetricDescriptor.MetricKind.DELTA
-    series.value_type = monitoring_v3.MetricDescriptor.ValueType.INT64
-
-    # Create a data point. For a DELTA, we specify an interval.
-    # For a single event, the start and end time can be the same.
-    now = time.time()
-    seconds = int(now)
-    nanos = int((now - seconds) * 10**9)
-
-    interval = monitoring_v3.TimeInterval(
-        {
-            "start_time": {"seconds": seconds, "nanos": nanos},
-            "end_time": {"seconds": seconds, "nanos": nanos},
-        }
-    )
-    # The value of the data point is 1, representing one occurrence of this sentiment.
-    point = monitoring_v3.Point({"interval": interval, "value": {"int64_value": 1}})
-    series.points = [point]
-
-    try:
-        # Send the time series data to Cloud Monitoring
-        client.create_time_series(name=project_name, time_series=[series])
-        print(f"Successfully sent '{sentiment_label}' sentiment metric to Cloud Monitoring.")
-    except Exception as e:
-        print(f"Error sending metric to Cloud Monitoring: {e}")
+    # Increment the counter by 1
+    _sentiment_counter.add(1, attributes)
+    print(f"Recorded metric for: {sentiment}")
