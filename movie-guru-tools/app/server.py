@@ -63,6 +63,7 @@ os.environ['GOOGLE_CLOUD_QUOTA_PROJECT']=f"{PROJECT_ID}"
 os.environ['OTEL_RESOURCE_ATTRIBUTES'] = f"gcp.project_id={PROJECT_ID}"
 os.environ['OTEL_SERVICE_NAME']="movie-guru-mcp-server"
 os.environ['OTEL_TRACES_EXPORTER']="otlp"
+os.environ['OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT']="512"
 os.environ['OTEL_EXPORTER_OTLP_ENDPOINT']="https://telemetry.googleapis.com"
 
 # Define the service name

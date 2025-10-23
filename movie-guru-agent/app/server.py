@@ -27,21 +27,11 @@ from google.adk.sessions import DatabaseSessionService, Session
 from google.adk.memory import InMemoryMemoryService
 from google.adk.events import Event
 
-from opentelemetry import trace
-from opentelemetry.sdk.resources import SERVICE_NAME, Resource
-from opentelemetry.sdk.trace import TracerProvider, export
-from google.auth.transport import requests
-from google.auth.transport.grpc import AuthMetadataPlugin
-import grpc
+# from opentelemetry import trace
 
 from app.utils.gcs import create_bucket_if_not_exists
 from app.utils.context import user_id_context
-from app.utils.tracing import CloudTraceLoggingSpanExporter
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
-    OTLPSpanExporter,
-)
-from opentelemetry.sdk.resources import SERVICE_NAME, Resource, SERVICE_INSTANCE_ID
+
 from app.utils.typing import Feedback
 from app.utils.envvars import PROJECT_ID, REGION, DB_HOST, DB_NAME, DB_PASSWORD, POSTER_DIRECTORY
 from app.utils.logging import logger
@@ -60,37 +50,9 @@ os.environ['GOOGLE_CLOUD_QUOTA_PROJECT']=f"{PROJECT_ID}"
 os.environ['OTEL_RESOURCE_ATTRIBUTES'] = f"gcp.project_id={PROJECT_ID}"
 os.environ['OTEL_SERVICE_NAME']="movie-guru-agent"
 os.environ['OTEL_TRACES_EXPORTER']="otlp"
+os.environ['OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT']="512"
 os.environ['OTEL_EXPORTER_OTLP_ENDPOINT']="https://telemetry.googleapis.com"
 
-# Define the service name
-resource = Resource(attributes={SERVICE_NAME: "movie-guru-agent",SERVICE_INSTANCE_ID: f"worker-{os.getpid()}",})
-
-# Set up OpenTelemetry Python SDK
-# Retrieve and store Google application-default credentials
-credentials, project_id = auth.default()
-# Request used to refresh credentials upon expiry
-request = auth.transport.requests.Request()
-
-# Supply the request and credentials to AuthMetadataPlugin
-# AuthMeatadataPlugin inserts credentials into each request
-auth_metadata_plugin = AuthMetadataPlugin(
-    credentials=credentials, request=request
-)
-
-# Initialize gRPC channel credentials using the AuthMetadataPlugin
-channel_creds = grpc.composite_channel_credentials(
-    grpc.ssl_channel_credentials(),
-    grpc.metadata_call_credentials(auth_metadata_plugin),
-)
-
-otlp_grpc_exporter = OTLPSpanExporter(credentials=channel_creds)
-
-# Initialize TracerProvider with the defined resource
-provider = TracerProvider(resource=resource)
-#processor = export.BatchSpanProcessor(CloudTraceLoggingSpanExporter())
-processor = BatchSpanProcessor(otlp_grpc_exporter)
-provider.add_span_processor(processor)
-trace.set_tracer_provider(provider)
 
 AGENT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # "sqlite:///./sessions.db"
@@ -124,8 +86,8 @@ app: FastAPI = get_fast_api_app(
     artifact_service_uri=bucket_name,
     session_service_uri=SESSION_DB_URL,
     allow_origins=allow_origins,
-    trace_to_cloud=True,
-    otel_to_cloud=False,
+    trace_to_cloud=False,
+    otel_to_cloud=True,
     lifespan=lifespan,
 )
 
@@ -150,18 +112,18 @@ async def add_root_span_for_request(request: Request, call_next):
 
     try:
         # The tracer name can be any string. Using the module name is a common practice.
-        tracer = trace.get_tracer(__name__)
-        span_name = f"HTTP {request.method} {request.url.path}"
+        #tracer = trace.get_tracer(__name__)
+        #span_name = f"HTTP {request.method} {request.url.path}"
 
-        with tracer.start_as_current_span(span_name) as span:
-            # Add attributes to the span for more context in Cloud Trace.
-            span.set_attribute("http.method", request.method)
-            span.set_attribute("http.url", str(request.url))
-            span.set_attribute("user.id", user_id)
-            span.set_attribute("service.name", "movie-guru-agent")
-            response = await call_next(request)
-            span.set_attribute("http.status_code", response.status_code)
-            return response
+        #with tracer.start_as_current_span(span_name) as span:
+        #    # Add attributes to the span for more context in Cloud Trace.
+        #    span.set_attribute("http.method", request.method)
+        #    span.set_attribute("http.url", str(request.url))
+        #    span.set_attribute("user.id", user_id)
+        #    span.set_attribute("service.name", "movie-guru-agent")
+        response = await call_next(request)
+        #    span.set_attribute("http.status_code", response.status_code)
+        return response
     finally:
         logger.log(f"User ID set in context: {user_id}")
 

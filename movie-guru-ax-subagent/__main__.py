@@ -52,6 +52,8 @@ VERTEX_AI = os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
 
 os.environ['GOOGLE_CLOUD_QUOTA_PROJECT']=f"{PROJECT_ID}"
 os.environ['OTEL_RESOURCE_ATTRIBUTES'] = f"gcp.project_id={PROJECT_ID}"
+os.environ['OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT']="512"
+os.environ['OTEL_SERVICE_NAME']="conversation-analysis-agent"
 os.environ['OTEL_EXPORTER_OTLP_ENDPOINT']="https://telemetry.googleapis.com"
 os.environ['OTEL_TRACES_EXPORTER']="otlp"
 
@@ -103,7 +105,7 @@ def main(host: str, port: int):
     server = A2AStarletteApplication(agent_card, request_handler)
     starlette_app = server.build()
     # Instrument the starlette app for tracing
-    StarletteInstrumentor().instrument_app(starlette_app)
+    StarletteInstrumentor().instrument_app(app=starlette_app,tracer_provider=tracer_provider)
     # setup_opentelemetry()
     uvicorn.run(starlette_app, host=host, port=port)
 
