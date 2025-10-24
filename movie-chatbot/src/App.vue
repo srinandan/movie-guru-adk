@@ -126,7 +126,7 @@ export default {
             if (item.content && item.content.parts) {
               for (const part of item.content.parts) {
                 if (part.functionResponse && part.functionResponse.name === 'search_movies_by_embedding') {
-                  const movies = JSON.parse(part.functionResponse.response.result.content[0].text);
+                  const movies = JSON.parse(part.functionResponse.response.content[0].text);
                   if (movies && movies.length > 0) {
                     agentMessage.text = 'Here are some movies you might like:';
                     movies.forEach(movie => {

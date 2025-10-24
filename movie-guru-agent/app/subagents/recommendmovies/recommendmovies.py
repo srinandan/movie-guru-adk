@@ -105,7 +105,9 @@ def get_recommender_agent() -> Agent:
                      AgentTool(agent=user_profile_agent),
                      load_memory,
                      MCPToolset(connection_params=SseConnectionParams(
-                         url=mcp_url, headers={"x-user-id":
-                                        user_id_context.get()}), errlog=logging)
+                            url=mcp_url
+                         ),
+                         header_provider=lambda ctx: {'x-user-id':user_id_context.get()},
+                         errlog=logging)
                  ],
                  output_key="recommenderOutput")
