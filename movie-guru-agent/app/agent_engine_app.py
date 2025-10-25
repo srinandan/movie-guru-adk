@@ -79,7 +79,6 @@ def deploy_agent_engine_app(
         "description": "A Movie Recommendation AI Agent",
         "extra_packages": extra_packages,
         "service_account":f"movie-guru-chat-server-sa@{project}.iam.gserviceaccount.com",
-        "network":"movie-guru-network",
         "env_vars": env_vars,
         "staging_bucket": staging_bucket_uri,
         "requirements": requirements,

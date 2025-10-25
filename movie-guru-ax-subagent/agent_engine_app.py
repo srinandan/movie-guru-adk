@@ -18,7 +18,7 @@ def deploy_agent_engine_app(
     location: str,
     agent_name: str | None = None,
     requirements_file: str = ".requirements.txt",
-    extra_packages: list[str] = ["agent_executor.py", "prompt.py", "agent_config.py", "__main__.py"],
+    extra_packages: list[str] = ["agent_executor.py", "prompt.py", "agent_config.py", "__main__.py", "model.py", "send_metrics.py"],
     env_vars: dict[str, Any] = {},
 ) -> None:
     """Deploy the agent engine app to Vertex AI."""
@@ -55,7 +55,6 @@ def deploy_agent_engine_app(
         "description": "A Conversation Analysis AI Agent",
         "extra_packages": extra_packages,
         "service_account":f"movie-guru-chat-server-sa@{project}.iam.gserviceaccount.com",
-        "network":"movie-guru-network",
         "env_vars": env_vars,
         "staging_bucket": staging_bucket_uri,
         "requirements": requirements,
