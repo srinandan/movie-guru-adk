@@ -47,8 +47,7 @@ skill = AgentSkill(
     ],
 )
 
-# TODO: set to false when deploying to Agent Engine
-capabilities = AgentCapabilities(streaming=True)
+capabilities = AgentCapabilities(streaming=False)
 
 agent_card = AgentCard(
     name="Conversation Analysis Agent",
@@ -58,7 +57,6 @@ agent_card = AgentCard(
     default_input_modes=["text"],
     default_output_modes=["application/json"],
     skills=[skill],
-    # TODO: uncomment this for Agent Engine
-    # preferred_transport="HTTP+JSON",
+    preferred_transport="HTTP+JSON",
     capabilities=capabilities,
 )

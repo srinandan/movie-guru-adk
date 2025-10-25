@@ -85,6 +85,14 @@ def get_session_user_id(
     print(f"Session user id: {user_id_context.get()}")
     return None
 
+def get_user_id_header(ctx: Optional[Dict[str, Any]] = None) -> Dict[str, str]:
+    """Returns the user ID in a dictionary for MCPToolset headers."""
+    user_id = user_id_context.get()
+    if user_id is None:
+        return {}
+    return {"x-user-id": user_id}
+
+
 def get_recommender_agent() -> Agent:
     """Creates and returns the recommender agent."""
 
@@ -107,7 +115,7 @@ def get_recommender_agent() -> Agent:
                      MCPToolset(connection_params=SseConnectionParams(
                             url=mcp_url
                          ),
-                         header_provider=lambda ctx: {'x-user-id':user_id_context.get()},
+                         header_provider=get_user_id_header,
                          errlog=logging)
                  ],
                  output_key="recommenderOutput")

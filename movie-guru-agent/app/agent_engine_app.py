@@ -13,42 +13,18 @@
 # limitations under the License.
 
 # mypy: disable-error-code="attr-defined"
-import copy
-import datetime
-import json
 import logging
-import os
-from collections.abc import Mapping, Sequence
 from typing import Any
 
 import google.auth
 import vertexai
 from google.adk.artifacts import GcsArtifactService
-from google.cloud import logging as google_cloud_logging
-from opentelemetry import trace
-from opentelemetry.sdk.trace import TracerProvider, export
-from vertexai import agent_engines
 from vertexai.preview.reasoning_engines import AdkApp
 
 from app.agent import root_agent, get_agent
 from app.utils.gcs import create_bucket_if_not_exists
-from app.utils.tracing import CloudTraceLoggingSpanExporter
-from app.utils.typing import Feedback
-
 
 class AgentEngineApp(AdkApp):
-
-    def set_up(self) -> None:
-        """Set up logging and tracing for the agent engine app."""
-        super().set_up()
-        logging_client = google_cloud_logging.Client()
-        self.logger = logging_client.logger(__name__)
-        provider = TracerProvider()
-        processor = export.BatchSpanProcessor(
-            CloudTraceLoggingSpanExporter(
-                project_id=os.environ.get("GOOGLE_CLOUD_PROJECT")))
-        provider.add_span_processor(processor)
-        trace.set_tracer_provider(provider)
 
     def clone(self) -> "AgentEngineApp":
         """Returns a clone of the ADK application."""
@@ -63,7 +39,6 @@ class AgentEngineApp(AdkApp):
             env_vars=template_attributes.get("env_vars"),
         )
 
-
 def deploy_agent_engine_app(
     project: str,
     location: str,
@@ -71,7 +46,7 @@ def deploy_agent_engine_app(
     requirements_file: str = ".requirements.txt",
     extra_packages: list[str] = ["./app"],
     env_vars: dict[str, Any] = {},
-) -> agent_engines.AgentEngine:
+) -> None:
     """Deploy the agent engine app to Vertex AI."""
 
     staging_bucket_uri = f"gs://{project}"
@@ -83,9 +58,7 @@ def deploy_agent_engine_app(
                                 project=project,
                                 location=location)
 
-    vertexai.init(project=project,
-                  location=location,
-                  staging_bucket=staging_bucket_uri)
+    client = vertexai.Client(project=project, location=location)
 
     # Read requirements
     with open(requirements_file) as f:
@@ -101,38 +74,33 @@ def deploy_agent_engine_app(
     env_vars["NUM_WORKERS"] = "1"
 
     # Common configuration for both create and update operations
-    agent_config = {
-        "agent_engine": agent_engine,
+    config = {
         "display_name": agent_name,
         "description": "A Movie Recommendation AI Agent",
         "extra_packages": extra_packages,
+        "service_account":f"movie-guru-chat-server-sa@{project}.iam.gserviceaccount.com",
+        "network":"movie-guru-network",
         "env_vars": env_vars,
+        "staging_bucket": staging_bucket_uri,
+        "requirements": requirements,
     }
-    logging.info(f"Agent config: {agent_config}")
-    agent_config["requirements"] = requirements
+    logging.info(f"Agent config: {config}")
 
     # Check if an agent with this name already exists
-    existing_agents = list(
-        agent_engines.list(filter=f"display_name={agent_name}"))
+    existing_agents = list(list(
+        client.agent_engines.list(
+            config={
+                "filter": 'display_name="movie-guru-agent"'
+            },
+        )))
     if existing_agents:
         # Update the existing agent with new configuration
         logging.info(f"Updating existing agent: {agent_name}")
-        remote_agent = existing_agents[0].update(**agent_config)
+        remote_agent = existing_agents[0].update(agent=agent_engine, config=config)
     else:
         # Create a new agent if none exists
         logging.info(f"Creating new agent: {agent_name}")
-        remote_agent = agent_engines.create(**agent_config)
-
-    config = {
-        "remote_agent_engine_id": remote_agent.resource_name,
-        "deployment_timestamp": datetime.datetime.now().isoformat(),
-    }
-    config_file = "deployment_metadata.json"
-
-    with open(config_file, "w") as f:
-        json.dump(config, f, indent=2)
-
-    logging.info(f"Agent Engine ID written to {config_file}")
+        remote_agent = client.agent_engines.create(agent=agent_engine, config=config)
 
     return remote_agent
 

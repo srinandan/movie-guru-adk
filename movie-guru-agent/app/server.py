@@ -14,17 +14,20 @@
 
 import os
 import datetime
-import psycopg2
-from google.cloud import storage
-from google import auth
+from contextlib import asynccontextmanager
 from typing import Annotated, Union, List, Dict, Any
 
-from contextlib import asynccontextmanager
+
+import psycopg2
+
 from fastapi import FastAPI, Request, Header, status, Response, HTTPException
 from fastapi.responses import JSONResponse
+
+from google.cloud import storage
+from google import auth
 from google.adk.cli.fast_api import get_fast_api_app
-from google.adk.sessions import DatabaseSessionService, Session
-from google.adk.memory import InMemoryMemoryService
+from google.adk.sessions import VertexAiSessionService
+from google.adk.memory import VertexAiMemoryBankService
 from google.adk.events import Event
 
 # from opentelemetry import trace
@@ -32,7 +35,6 @@ from google.adk.events import Event
 from app.utils.gcs import create_bucket_if_not_exists
 from app.utils.context import user_id_context
 
-from app.utils.typing import Feedback
 from app.utils.envvars import PROJECT_ID, REGION, DB_HOST, DB_NAME, DB_PASSWORD, POSTER_DIRECTORY
 from app.utils.logging import logger
 
@@ -55,12 +57,7 @@ os.environ['OTEL_EXPORTER_OTLP_ENDPOINT']="https://telemetry.googleapis.com"
 
 
 AGENT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-# "sqlite:///./sessions.db"
-SESSION_DB_URL = (
-    f"postgresql+pg8000://postgres:{DB_PASSWORD}@{DB_HOST}:5432/{DB_NAME}")
-
 db_conn = None
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -75,16 +72,16 @@ async def lifespan(app: FastAPI):
     yield
 
 
-# Initialize DatabaseSessionService
-session_service = DatabaseSessionService(db_url=SESSION_DB_URL)
+# Initialize VertexAiSessionService
+REASONING_ENGINE_APP_NAME = f"projects/{PROJECT_ID}/locations/{REGION}/reasoningEngines/4307046530742747136"
+session_service = VertexAiSessionService(project=PROJECT_ID, location=REGION)
 
-memory_service = InMemoryMemoryService()  # Initialize MemoryService
+memory_service = VertexAiMemoryBankService()  # Initialize MemoryService
 
 app: FastAPI = get_fast_api_app(
     agents_dir=AGENT_DIR,
     web=False,
     artifact_service_uri=bucket_name,
-    session_service_uri=SESSION_DB_URL,
     allow_origins=allow_origins,
     trace_to_cloud=False,
     otel_to_cloud=True,
@@ -146,7 +143,7 @@ async def start_user_session(
     # For persistent sessions across multiple conversations for the same user,
     # you might derive session_id from user_id or retrieve an existing one.
     # Example: unique session per request
-    
+
     # Get today's date
     today = datetime.date.today()
     ts = today.strftime("%y%m%d")
@@ -155,13 +152,13 @@ async def start_user_session(
 
     try:
         # Attempt to get an existing session for this user/session_id
-        session = await session_service.get_session(app_name="app",
+        session = await session_service.get_session(app_name=REASONING_ENGINE_APP_NAME,
                                                     user_id=user_id,
                                                     session_id=session_id)
         if not session:
             # If no session exists, create a new one, passing the extracted user_id
             session = await session_service.create_session(
-                app_name="app",
+                app_name=REASONING_ENGINE_APP_NAME,
                 user_id=user_id,
                 session_id=session_id,
             )
@@ -198,7 +195,7 @@ async def add_event_to_session(
 
     try:
         user_id = x_user_id.split(":")[-1]
-        session = await session_service.get_session(app_name="app",
+        session = await session_service.get_session(app_name=REASONING_ENGINE_APP_NAME,
                                                     user_id=user_id,
                                                     session_id=session_id)
         if not session or session.user_id != x_user_id:

@@ -23,19 +23,31 @@ from a2a.utils import new_agent_text_message
 from a2a.server.tasks import TaskUpdater
 from a2a.types import TaskState, TextPart, UnsupportedOperationError
 from a2a.utils.errors import ServerError
+from google import auth
 from google.adk.artifacts import InMemoryArtifactService
-from google.adk.memory.in_memory_memory_service import InMemoryMemoryService
-from google.adk.sessions import InMemorySessionService
+from google.adk.memory import VertexAiMemoryBankService
+from google.adk.sessions import VertexAiSessionService
 from google.adk.agents import LlmAgent
 from google.adk import Runner
 from pydantic import BaseModel, Field
 from google.genai import types
 from prompt import AGENT_INSTRUCTION
-from send_metrics import record_sentiment
+#from send_metrics import record_sentiment
 from model import get_model
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
+
+credentials, project_id = auth.default()
+PROJECT_ID = os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
+
+REGION = os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "us-central1")
+
+# Initialize VertexAiSessionService
+REASONING_ENGINE_APP_NAME = f"projects/{PROJECT_ID}/locations/{REGION}/reasoningEngines/6252320094790090752"
+session_service = VertexAiSessionService(project=PROJECT_ID, location=REGION)
+
+memory_service = VertexAiMemoryBankService()  # Initialize MemoryService
 
 # Conversation schema
 class ConversationOutput(BaseModel):
@@ -67,8 +79,8 @@ class ConversationAnalysisAgentExecutor(AgentExecutor):
             app_name=self.agent.name,
             agent=self.agent,
             artifact_service=InMemoryArtifactService(),
-            session_service=InMemorySessionService(),
-            memory_service=InMemoryMemoryService(),
+            session_service=session_service,
+            memory_service=memory_service,
         )
 
     async def cancel(self, context: RequestContext, event_queue: EventQueue):
