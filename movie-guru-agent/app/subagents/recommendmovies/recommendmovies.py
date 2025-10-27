@@ -34,8 +34,7 @@ from app.subagents.userprofile.userprofile import get_user_profile_agent
 from app.utils.model_armor import sanitize_user_prompt
 from app.subagents.recommendmovies.prompt import AGENT_INSTRUCTION
 
-# output schema cannot be used with tools
-
+logging.getLogger("google_adk.google.adk.tools.base_authenticated_tool").setLevel(logging.ERROR)
 
 def get_mcp_url() -> str:
     """Returns the MCP URL."""
@@ -70,7 +69,7 @@ def before_model_callback(
         return LlmResponse(
             content=types.Content(
                 role="model", # Mimic a response from the agent's perspective
-                parts=[types.Part(text="I cannot process this request because it movie-guru-agent policies")],
+                parts=[types.Part(text="I cannot process this request because it is against the movie-guru-agent policies")],
             )
         )
     else:
