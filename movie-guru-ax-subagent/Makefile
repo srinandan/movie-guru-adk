@@ -21,6 +21,7 @@ backend:
 	--network movie-guru-network \
 	--subnet movie-guru-subnet \
 	--ingress internal-and-cloud-load-balancing \
+	--labels=appid=movie-guru-adk \
 	--build-worker-pool="projects/${PROJECT_ID}/locations/${REGION}/workerPools/movie-guru"
 
 local-backend:

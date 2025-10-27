@@ -32,4 +32,5 @@ backend:
 		--max-instances 1 \
 		--min-instances 1 \
 		--ingress internal-and-cloud-load-balancing \
+		--labels=appid=movie-guru-adk \
 		--build-worker-pool="projects/${PROJECT_ID}/locations/${REGION}/workerPools/movie-guru"

@@ -34,6 +34,7 @@ deploy:
 		--project ${PROJECT_ID} \
 		--region ${REGION} \
 		--worker-pool="projects/${PROJECT_ID}/locations/${REGION}/workerPools/movie-guru"
+		--labels=appid=movie-guru-adk \
 		--substitutions=_SHORT_SHA=$(echo | sha256sum | cut -c 1-10)
 
 local-backend:

@@ -21,7 +21,23 @@ COPY ./pyproject.toml ./uv.lock* ./
 
 COPY ./app ./app
 
-RUN uv sync --frozen
+# Set environment variables for uv:
+# UV_COMPILE_BYTECODE=1: Compiles Python files to .pyc for faster startup
+# UV_LINK_MODE=copy: Ensures files are copied, not symlinked, which can avoid issues
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy
+
+# Install dependencies using uv sync.
+# --frozen: Ensures uv respects the uv.lock file
+# --no-install-project: Prevents installing the project itself in this stage
+# --no-dev: Excludes development dependencies
+# --mount=type=cache: Leverages Docker's build cache for uv, speeding up repeated builds
+RUN --mount=type=cache,target=/.cache/uv \
+    uv sync --frozen --no-install-project --no-dev
+
+# Install the project
+RUN --mount=type=cache,target=/.cache/uv \
+    uv sync --frozen --no-dev
 
 EXPOSE 8080
 

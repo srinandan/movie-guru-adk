@@ -26,6 +26,7 @@ backend:
 	--subnet movie-guru-subnet \
 	--set-secrets="DB_PASSWORD=postgres-root-password-secret:latest" \
 	--ingress internal-and-cloud-load-balancing \
+	--labels=appid=movie-guru-adk \
 	--build-worker-pool="projects/srinandans-next25-demo/locations/us-central1/workerPools/movie-guru"
 
 local-backend:
