@@ -371,6 +371,56 @@ def create_or_update_user_preferences(preferences: dict) -> bool:
         return False
 
 
+@mcp.tool()
+def get_user_recommendations() -> dict:
+    """
+    Retrieves recommendations made to the user. The user id is retrieved from the header
+
+    Returns:
+        A dictionary representing the recommendations, or None if not found or an error occurs.
+    """
+    global conn
+
+    headers = get_http_headers()
+    user = headers.get("x-user-id", "")
+    print(f"Getting recommendations for user: {user}")
+
+    if user == "":
+        return []
+
+    if conn is None:
+        db_password = os.getenv("DB_PASSWORD")
+        db_host = os.getenv("DB_HOST")
+        if db_password is None or db_host is None:
+            raise ValueError(
+                "DB_PASSWORD or DB_HOST environment variable not set.")
+        conn = connect_to_movie_db(dbname="fake-movies-db",
+                                   user="postgres",
+                                   password=db_password,
+                                   host=db_host,
+                                   port="5432")
+
+    results = []
+    try:
+        with conn.cursor() as cur:
+            # Execute the query
+            query = """SELECT "sessions"."state" -> 'recommenderOutput' FROM "sessions" WHERE "sessions"."user_id" = '%s' AND "sessions"."state" -> 'recommenderOutput' IS NOT NULL LIMIT 5;"""
+            print(query)
+            cur.execute(query, (user, ))
+
+            # Fetch the result
+            rows = cur.fetchall()
+
+            for row in rows:
+                results.append(row)
+    except psycopg2.Error as e:
+        print(f"Error during user recommendations search: {e}")
+        return []
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        return []
+    return results
+
 def generate_download_signed_url_v4(bucket_name, blob_name):
     """Generates a v4 signed URL for downloading a blob using ADC.
     """
