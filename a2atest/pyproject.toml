@@ -1,0 +1,12 @@
+[project]
+name = "a2atest"
+version = "0.1.0"
+description = "Test various A2A functions"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "google-adk[agent_engines,a2a,event-actions,litellm]>=1.17.0",
+    "a2a-sdk>=0.3.9",
+    "click>=8.3.0",
+    "litellm>=1.78.6",
+]
