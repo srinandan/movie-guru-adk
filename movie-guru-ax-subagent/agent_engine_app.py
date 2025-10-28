@@ -1,14 +1,11 @@
-import json
+
 import logging
-import datetime
 from typing import Any
 
 import vertexai
-from google.adk.artifacts import GcsArtifactService
-
 import google.auth
 
-from vertexai.preview.reasoning_engines import AdkApp, A2aAgent
+from vertexai.preview.reasoning_engines import A2aAgent
 from agent_config import agent_card
 from agent_executor import ConversationAnalysisAgentExecutor
 from google.genai import types
@@ -25,7 +22,6 @@ def deploy_agent_engine_app(
     """Deploy the agent engine app to Vertex AI."""
 
     staging_bucket_uri = f"gs://{project}"
-    artifacts_bucket_name = f"{project}"
 
     client = vertexai.Client(
         project=project,
@@ -33,21 +29,13 @@ def deploy_agent_engine_app(
         http_options=types.HttpOptions(api_version="v1beta1"))
     
     a2a_agent = A2aAgent(
-        agent_card=agent_card, 
+        agent_card=agent_card,
         agent_executor_builder=ConversationAnalysisAgentExecutor
     )
-
-    a2a_agent.set_up()
 
     # Read requirements
     with open(requirements_file) as f:
         requirements = f.read().strip().split("\n")
-
-    agent_engine = AdkApp(
-        agent=a2a_agent,
-        artifact_service_builder=lambda: GcsArtifactService(
-            bucket_name=artifacts_bucket_name),
-    )
 
     # Set worker parallelism to 1
     env_vars["NUM_WORKERS"] = "1"
@@ -75,11 +63,11 @@ def deploy_agent_engine_app(
     if existing_agents:
         # Update the existing agent with new configuration
         logging.info(f"Updating existing agent: {agent_name}")
-        remote_agent = existing_agents[0].update(agent=agent_engine, config=config)
+        remote_agent = existing_agents[0].update(agent=a2a_agent, config=config)
     else:
         # Create a new agent if none exists
         logging.info(f"Creating new agent: {agent_name}")
-        remote_agent = client.agent_engines.create(agent=agent_engine, config=config)
+        remote_agent = client.agent_engines.create(agent=a2a_agent, config=config)
 
     return remote_agent
 
