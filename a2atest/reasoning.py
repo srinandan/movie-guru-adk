@@ -7,7 +7,7 @@ credentials, project_id = google.auth.default()
 
 PROJECT_ID = os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
 LOCATION = os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "us-central1")
-RESOURCE_ID = "5827011404980289536"
+RESOURCE_ID = "7388282732050120704"
 RESOURCE_NAME = f"projects/{PROJECT_ID}/locations/{LOCATION}/reasoningEngines/{RESOURCE_ID}"
 
 client = vertexai.Client(
@@ -18,11 +18,9 @@ client = vertexai.Client(
 
 remote_agent = client.agent_engines.get(name=RESOURCE_NAME)
 
-client = remote_agent.api_client
+response = remote_agent.handle_authenticated_agent_card()
 
-print(client)
-
-response = client.handle_authenticated_agent_card()
+print(response)
 
 message_data = {
   "messageId": "remote-agent-message-id",

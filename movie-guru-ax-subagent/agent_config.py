@@ -14,7 +14,7 @@
 
 import os
 
-from a2a.types import AgentCapabilities, AgentCard, AgentSkill
+from a2a.types import AgentCapabilities, AgentCard, AgentSkill, TransportProtocol
 from google.cloud import resourcemanager_v3
 
 
@@ -34,8 +34,6 @@ PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT")
 REGION = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
 PROJECT_NUMBER = get_gcp_project_number(PROJECT_ID)
 
-CLOUD_RUN = f"https://conversation-analysis-agent-{PROJECT_NUMBER}.{REGION}.run.app"
-
 skill = AgentSkill(
     id="get_analysis",
     name="Get Conversation Analysis",
@@ -52,11 +50,12 @@ capabilities = AgentCapabilities(streaming=False)
 agent_card = AgentCard(
     name="Conversation Analysis Agent",
     description="Agent to analyze the conversation between the user and agent",
-    url=f"{CLOUD_RUN}",
+    url="http://localhost:9999/",
     version="1.0.0",
     default_input_modes=["text"],
     default_output_modes=["application/json"],
     skills=[skill],
-    preferred_transport="HTTP+JSON",
+    preferred_transport=TransportProtocol.http_json,
     capabilities=capabilities,
+    supports_authenticated_extended_card=True,
 )

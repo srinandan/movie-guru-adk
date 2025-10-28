@@ -11,6 +11,7 @@ import google.auth
 from vertexai.preview.reasoning_engines import AdkApp, A2aAgent
 from agent_config import agent_card
 from agent_executor import ConversationAnalysisAgentExecutor
+from google.genai import types
 
 
 def deploy_agent_engine_app(
@@ -26,7 +27,10 @@ def deploy_agent_engine_app(
     staging_bucket_uri = f"gs://{project}"
     artifacts_bucket_name = f"{project}"
 
-    client = vertexai.Client(project=project, location=location)
+    client = vertexai.Client(
+        project=project,
+        location=location,
+        http_options=types.HttpOptions(api_version="v1beta1"))
     
     a2a_agent = A2aAgent(
         agent_card=agent_card, 
