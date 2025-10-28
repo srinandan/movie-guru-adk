@@ -44,7 +44,6 @@ PROJECT_ID = os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
 REGION = os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "us-central1")
 
 # Initialize VertexAiSessionService
-REASONING_ENGINE_APP_NAME = f"projects/{PROJECT_ID}/locations/{REGION}/reasoningEngines/6252320094790090752"
 session_service = VertexAiSessionService(project=PROJECT_ID, location=REGION)
 
 memory_service = VertexAiMemoryBankService()  # Initialize MemoryService
