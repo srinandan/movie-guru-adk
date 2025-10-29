@@ -1,7 +1,7 @@
 agent-engine:
 	# Export dependencies to requirements file using uv export.
 	uv export --no-hashes --no-header --no-dev --no-emit-project --no-annotate --frozen > .requirements.txt 2>/dev/null || \
-	uv export --no-hashes --no-header --no-dev --no-emit-project --frozen > .requirements.txt && uv run app/agent_engine_app.py --project=$${PROJECT_ID} --set-env-vars="MCPTOOLSET_URL=movie-guru-mcp-server-$${PROJECT_NUMBER}.us-central1.run.app,MODEL=gemini-2.5-flash,DB_HOST=10.2.0.2,A2A_CONV_AGENT=conversation-analysis-agent-$${PROJECT_NUMBER}.us-central1.run.app"
+	uv export --no-hashes --no-header --no-dev --no-emit-project --frozen > .requirements.txt && uv run app/agent_engine_app.py --project=$${PROJECT_ID} --set-env-vars="MCPTOOLSET_URL=movie-guru-mcp-server-$${PROJECT_NUMBER}.us-central1.run.app,MODEL=gemini-2.5-flash,DB_HOST=10.2.0.2,A2A_CONV_AGENT=$${REGION-aiplatform.googleapis.com/v1beta1/projects/$${PROJECT_ID}/locations/$${REGION/reasoningEngines/6699794939015856128/a2a"
 
 lint:
 	uv run codespell

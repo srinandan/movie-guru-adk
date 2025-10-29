@@ -23,5 +23,14 @@ async def main():
     agent_card = await remote_agent.handle_authenticated_agent_card()
     print(agent_card)
 
+    message_data = {
+        "messageId": "remote-agent-message-id",
+        "role": "user",
+        "parts": [{"kind": "text", "text": "Can you recommend movies?"}],
+    }
+
+    response = await remote_agent.on_message_send(**message_data)
+    print(response)
+
 if __name__ == "__main__":
     asyncio.run(main())

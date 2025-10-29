@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from google.adk.agents.remote_a2a_agent import AGENT_CARD_WELL_KNOWN_PATH
 from google.adk.agents.remote_a2a_agent import RemoteA2aAgent
 from app.utils.envvars import A2A_CONV_AGENT
 
@@ -24,5 +23,5 @@ def get_conversation_analysis_agent() -> RemoteA2aAgent:
         description=(
             "Agent to analyze a conversation where the user is asking for movie recommendations"
         ),
-        agent_card=f"https://{A2A_CONV_AGENT}{AGENT_CARD_WELL_KNOWN_PATH}",
+        agent_card=f"https://{A2A_CONV_AGENT}/v1/card",
     )
