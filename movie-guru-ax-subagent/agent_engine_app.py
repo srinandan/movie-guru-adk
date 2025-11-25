@@ -8,7 +8,7 @@ import google.auth
 from vertexai.preview.reasoning_engines import A2aAgent
 from agent_config import agent_card
 from agent_executor import ConversationAnalysisAgentExecutor
-from google.genai import types
+from vertexai import types
 
 
 def deploy_agent_engine_app(
@@ -26,7 +26,7 @@ def deploy_agent_engine_app(
     client = vertexai.Client(
         project=project,
         location=location,
-        http_options=types.HttpOptions(api_version="v1beta1"))
+        http_options=dict(api_version="v1beta1"))
     
     a2a_agent = A2aAgent(
         agent_card=agent_card,
@@ -42,11 +42,11 @@ def deploy_agent_engine_app(
 
     # Common configuration for both create and update operations
     config = {
-        #"agent_engine": agent_engine,
         "display_name": agent_name,
         "description": "A Conversation Analysis AI Agent",
         "extra_packages": extra_packages,
         "service_account":f"movie-guru-chat-server-sa@{project}.iam.gserviceaccount.com",
+        #"identity_type": types.IdentityType.AGENT_IDENTITY,
         "env_vars": env_vars,
         "staging_bucket": staging_bucket_uri,
         "requirements": requirements,
