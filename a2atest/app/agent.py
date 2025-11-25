@@ -17,19 +17,18 @@ from google.adk.agents.remote_a2a_agent import AGENT_CARD_WELL_KNOWN_PATH
 from google.adk.agents.remote_a2a_agent import RemoteA2aAgent
 
 remote_agent = RemoteA2aAgent(
-    name="conversation_analysis_agent_test",
+    name="a2a_agent_test",
     description=(
-        "Agent to analyze a conversation where the user is asking for movie recommendations"
+        "Movie Recommendation Agent"
     ),
-    agent_card=f"http://localhost:8080/{AGENT_CARD_WELL_KNOWN_PATH}",
+    agent_card=f"http://localhost:8080{AGENT_CARD_WELL_KNOWN_PATH}",
 )
 
 root_agent = Agent(
     model="gemini-2.5-flash",
     name="root_agent",
     instruction="""
-      You are a helpful assistant that is used in the test Google A2A. Call the remote_agent
-      and return the information.
+      You are a help agent to recommend movies. Call the sub agent and return the recommended movies.
     """,
     global_instruction=(
         "You are orchestration agent, call the remote agent and return the information."
