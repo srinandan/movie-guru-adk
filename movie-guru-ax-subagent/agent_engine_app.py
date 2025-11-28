@@ -45,8 +45,8 @@ def deploy_agent_engine_app(
         "display_name": agent_name,
         "description": "A Conversation Analysis AI Agent",
         "extra_packages": extra_packages,
-        "service_account":f"movie-guru-chat-server-sa@{project}.iam.gserviceaccount.com",
-        #"identity_type": types.IdentityType.AGENT_IDENTITY,
+        #"service_account":f"movie-guru-chat-server-sa@{project}.iam.gserviceaccount.com",
+        "identity_type": types.IdentityType.AGENT_IDENTITY,
         "env_vars": env_vars,
         "staging_bucket": staging_bucket_uri,
         "requirements": requirements,
@@ -57,7 +57,7 @@ def deploy_agent_engine_app(
     existing_agents = list(
         client.agent_engines.list(
             config={
-                "filter": 'display_name="conversation-analysis-agent"'
+                "filter": 'display_name="conversation-analysis-agentx"'
             },
         ))
     if existing_agents:
