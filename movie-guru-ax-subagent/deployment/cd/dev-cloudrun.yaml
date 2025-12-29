@@ -38,7 +38,7 @@ steps:
     args:
       - "run"
       - "deploy"
-      - "movie-guru-agent"
+      - "conversation-analysis-agent"
       - "--project"
       - "${PROJECT_ID}"
       - "--region" 
@@ -56,7 +56,7 @@ steps:
       - "--service-account" 
       - "movie-guru-chat-server-sa@${PROJECT_ID}.iam.gserviceaccount.com"
       - "--set-env-vars" 
-      - 'MCPTOOLSET_URL=movie-guru-mcp-server-${PROJECT_NUMBER}.${_REGION}.run.app,GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GOOGLE_CLOUD_LOCATION=${_REGION},USER_ID=fake,DB_HOST=${_DB_HOST},A2A_CONV_AGENT=conversation-analysis-agent-${PROJECT_NUMBER}.${_REGION}.run.app,OPENAI_API_BASE=https://litellm-server-${PROJECT_NUMBER}.${_REGION}.run.app/v1,MODEL_NAME=${_MODEL_NAME}'
+      - 'GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GOOGLE_CLOUD_LOCATION=${_REGION},USER_ID=fake,DB_HOST=${_DB_HOST},OPENAI_API_BASE=https://litellm-server-${PROJECT_NUMBER}.${_REGION}.run.app/v1,MODEL_NAME=${_MODEL_NAME}'
       - "--startup-probe"
       - 'initialDelaySeconds=30,tcpSocket.port=8080,timeoutSeconds=240,periodSeconds=240,failureThreshold=1'
       - "--max-instances" 
@@ -82,7 +82,7 @@ substitutions:
   _STAGING_PROJECT_ID: ${PROJECT_ID}
   _REGION: ${_REGION}
   _ARTIFACT_REGISTRY_REPO_NAME: movie-guru
-  _CONTAINER_NAME: movie-guru-agent
+  _CONTAINER_NAME: conversation-analysis-agent
   _CLOUD_RUN_APP_SA_EMAIL: "movie-guru-chat-server-sa@${PROJECT_ID}.iam.gserviceaccount.com"
   _MODEL_NAME: "openai/gemini-2.0-flash-lite"
   _DB_HOST: "10.2.0.2"

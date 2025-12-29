@@ -12,19 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 from typing import Any
 from google.adk.models.lite_llm import LiteLlm
-from app.utils.envvars import API_BASE, MODEL, GEMINI25, GEMINI20, OLLAMA
 
 
 def get_model() -> Any:
-    if MODEL == "ollama":
-        print(f"using ollama model {OLLAMA}")
-        ollama_model = LiteLlm(model=OLLAMA, api_base=API_BASE)
-        return ollama_model
-    elif MODEL == "gemini-2.0-flash":
-        print(f"using gemini 2.0 model {GEMINI20}")
-        return GEMINI20
-    else:
-        print(f"using gemini 2.5 model {GEMINI25}")
-        return MODEL
+    print(f"using model {os.environ.get('MODEL_NAME')}")
+    model = LiteLlm(model=os.environ.get("MODEL_NAME"))
+    return model

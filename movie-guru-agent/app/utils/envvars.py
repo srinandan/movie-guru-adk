@@ -16,10 +16,7 @@ import os
 import google.auth
 from google.cloud import resourcemanager_v3
 
-GEMINI25 = "gemini-2.5-flash"
 DB_NAME = "fake-movies-db"
-GEMINI20 = "gemini-2.0-flash"
-OLLAMA = "ollama_chat/gemma2:9b"
 
 DB_PASSWORD = os.environ.setdefault("DB_PASSWORD", "changeit")
 DB_HOST = os.environ.setdefault("DB_HOST", "localhost")
@@ -30,8 +27,7 @@ PROJECT_ID = os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
 REGION = os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "us-central1")
 VERTEX_AI = os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
 USER = os.environ.setdefault("USER_ID", "fake")
-MODEL = os.environ.setdefault("MODEL", GEMINI25)
-API_BASE = os.environ.setdefault("API_BASE", "http://localhost:11434")
+MODEL = os.environ.setdefault("MODEL_NAME", "openai/gemini-2.0-flash-lite")
 MODEL_ARMOR_TEMPLATE = os.environ.setdefault("MODEL_ARMOR_TEMPLATE",
                                              "movie-guru")
 POSTER_DIRECTORY = os.environ.setdefault("POSTER_DIRECTORY", "/mnt")
@@ -67,3 +63,9 @@ PROJECT_NUMBER = get_gcp_project_number()
 MCPTOOLSET = os.environ.setdefault(
     "MCPTOOLSET_URL",
     f"movie-guru-mcp-server-{PROJECT_NUMBER}.{REGION}.run.app")
+
+API_BASE = os.environ.setdefault("OPENAI_API_BASE", 
+    f"https://litellm-server-{PROJECT_NUMBER}.{REGION}.run.app/v1")
+
+os.environ.setdefault("OPENAI_API_KEY", "")
+# API_BASE = os.environ.setdefault("OPENAI_API_BASE", "http://localhost:4000/v1")

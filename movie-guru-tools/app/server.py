@@ -250,7 +250,7 @@ def search_movies_by_embedding(query_text: str) -> List[Dict[str, Any]]:
 
 
 @mcp.tool()
-def get_user_preferences() -> dict:
+def get_user_preferences(user: str = "fake") -> dict:
     """
     Retrieves user preferences from a PostgreSQL database.
 
@@ -372,9 +372,12 @@ def create_or_update_user_preferences(preferences: dict) -> bool:
 
 
 @mcp.tool()
-def get_user_recommendations() -> dict:
+def get_user_recommendations(user: str = "fake") -> dict:
     """
-    Retrieves recommendations made to the user. The user id is retrieved from the header
+    Retrieves recommendations made to the user.
+
+    Args:
+        user: The user id for whom to retrieve recommendations.
 
     Returns:
         A dictionary representing the recommendations, or None if not found or an error occurs.
@@ -457,7 +460,7 @@ def generate_download_signed_url_v4(bucket_name, blob_name):
 
 
 @mcp.tool()
-def get_random_movies() -> List[Dict[str, Any]]:
+def get_random_movies(user: str = "fake") -> List[Dict[str, Any]]:
     """
     Retrieves 5 random movies from the 'movies' table.
 

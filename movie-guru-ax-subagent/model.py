@@ -14,25 +14,48 @@
 
 import os
 from typing import Any
+import google.auth
 from google.adk.models.lite_llm import LiteLlm
+from google.cloud import resourcemanager_v3
+
+_, project_id = google.auth.default()
+PROJECT_ID = os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
+REGION = os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "us-central1")
+
+def get_gcp_project_number() -> str | None:
+    """
+    Retrieves the GCP Project Number given a Project ID.
+
+    Args:
+        project_id (str): The Google Cloud Project ID (e.g., "my-project-123").
+
+    Returns:
+        str or None: The Project Number as a string, or None if the project
+                     is not found or an error occurs.
+    """
+    try:
+        client = resourcemanager_v3.ProjectsClient()
+        request = resourcemanager_v3.GetProjectRequest(
+            name=f"projects/{PROJECT_ID}")
+        project = client.get_project(request=request)
+
+        # The project number is part of the 'name' attribute in the format "projects/PROJECT_NUMBER"
+        project_number = project.name.split('/')[-1]
+        return project_number
+    except Exception as e:
+        print(f"Error getting project number for ID '{PROJECT_ID}': {e}")
+        return None
 
 
-API_BASE = os.environ.setdefault("API_BASE", "http://localhost:11434")
-GEMINI25 = "gemini-2.5-flash"
-GEMINI20 = "gemini-2.0-flash"
-OLLAMA_MODEL = os.environ.setdefault("OLLAMA_MODEL","ollama_chat/gemma3:4b")
-MODEL = os.environ.setdefault("MODEL", GEMINI25)
+PROJECT_NUMBER = get_gcp_project_number()
+API_BASE = os.environ.setdefault("OPENAI_API_BASE", 
+    f"https://litellm-server-{PROJECT_NUMBER}.{REGION}.run.app/v1")
 
-os.environ["OLLAMA_API_BASE"]=API_BASE
+# API_BASE = os.environ.setdefault("API_BASE", "http://localhost:4000/v1")
+MODEL = os.environ.setdefault("MODEL_NAME", "openai/gemini-2.0-flash-lite")
+os.environ.setdefault("OPENAI_API_KEY", "")
 
 def get_model() -> Any:
-    if MODEL == "ollama":
-        print(f"using ollama model {OLLAMA_MODEL}")
-        ollama_model = LiteLlm(model=OLLAMA_MODEL, api_base=API_BASE)
-        return ollama_model
-    elif MODEL == "gemini-2.0-flash":
-        print(f"using gemini 2.0 model {GEMINI20}")
-        return GEMINI20
-    else:
-        print(f"using gemini 2.5 model {GEMINI25}")
-        return MODEL
+    print(f"using model {os.environ.get("MODEL_NAME")}")
+    model = LiteLlm(model=os.environ.get("MODEL_NAME"))
+    return model
