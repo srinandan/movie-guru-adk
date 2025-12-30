@@ -1,30 +1,16 @@
+PROJECT_ID ?= $(shell gcloud config get-value project)
+PROJECT_NUMBER ?= $(shell gcloud projects describe ${PROJECT_ID} --format="value(projectNumber)")
+REGION ?= us-central1
+_COMMIT_SHA ?= $(shell echo | sha256sum | cut -c 1-10)
+
+.PHONY: backend local
+
 backend:
-	PROJECT_ID=$$(gcloud config get-value project) && \
-	PROJECT_NUMBER=$$(gcloud projects describe ${PROJECT_ID} --format="value(projectNumber)") && \
-	gcloud run deploy ollama-gemma \
-	--project ${PROJECT_ID} \
-	--region ${REGION} \
-	--source . \
-	--port 8080 \
-	--cpu 4000m \
-	--gpu=1 \
-	--gpu-type=nvidia-l4 \
-	--no-gpu-zonal-redundancy \
-	--memory 16Gi \
-	--concurrency 10 \
-	--service-account movie-guru-chat-server-sa@${PROJECT_ID}.iam.gserviceaccount.com \
-	--startup-probe="initialDelaySeconds=30,tcpSocket.port=8080,timeoutSeconds=240,periodSeconds=240,failureThreshold=1" \
-	--max-instances 1 \
-	--allow-unauthenticated \
-	--timeout 300 \
-	--cpu-boost \
-	--session-affinity \
-	--vpc-egress private-ranges-only \
-	--network movie-guru-network \
-	--subnet movie-guru-subnet \
-	--ingress internal-and-cloud-load-balancing \
-	--labels=appid=movie-guru-adk \
-	--build-worker-pool="projects/${PROJECT_ID}/locations/${REGION}/workerPools/movie-guru"
+	export _COMMIT_SHA=${_COMMIT_SHA} ;\
+	export REGION=${REGION} ;\
+	export PROJECT_ID=${PROJECT_ID} ;\
+	export PROJECT_NUMBER=${PROJECT_NUMBER} ;\
+	gcloud builds submit --config=deployment/cd/dev-cloudrun.yaml --region=${REGION} --substitutions=_COMMIT_SHA=${_COMMIT_SHA},_REGION=${REGION}
 
 local:
 	docker build -t ollama -f Dockerfile . && docker run -ti --rm ollama
