@@ -4,6 +4,8 @@ FROM ghcr.io/berriai/litellm:main-latest
 # Set the working directory to /app
 WORKDIR /app
 
+RUN pip install --upgrade certifi
+
 
 # Copy the configuration file into the container at /app
 COPY litellm_config.yaml .

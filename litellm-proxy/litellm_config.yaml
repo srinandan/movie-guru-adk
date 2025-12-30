@@ -1,7 +1,7 @@
 model_list:
   - model_name: gemini-2.5-flash
     litellm_params:
-      model: gemini/gemini-2.5-flash
+      model: vertex_ai/gemini-2.5-flash
       api_key: os.environ/GEMINI_API_KEY
       vertex_ai_project: os.environ/GOOGLE_CLOUD_PROJECT
       vertex_ai_location: os.environ/GOOGLE_CLOUD_LOCATION
@@ -24,10 +24,27 @@ model_list:
 
   - model_name: gemini-2.0-flash-lite
     litellm_params:
-      model: gemini/gemini-2.0-flash-lite
+      model: vertex_ai/gemini-2.0-flash-lite
       api_key: os.environ/GEMINI_API_KEY
       vertex_ai_project: os.environ/GOOGLE_CLOUD_PROJECT
       vertex_ai_location: os.environ/GOOGLE_CLOUD_LOCATION
 
 litellm_settings:
-  drop_params: True
+  drop_params: true
+  request_timeout: 60
+  set_verbose: false
+  json_logs: true
+
+guardrails:
+  - guardrail_name: model-armor-shield
+    litellm_params:
+      guardrail: model_armor
+      mode: [pre_call]                             # Run on input
+      template_id: "movie-guru"                    # Required: Your Model Armor template ID
+      project_id: os.environ/GOOGLE_CLOUD_PROJECT  # GCP project ID
+      location: "global"                           # GCP location (default: us-central1)
+      mask_request_content: true                   # Enable request content masking
+      mask_response_content: false                 # Disable response content masking
+      fail_on_error: false                         # Fail request if Model Armor errors (default: true)
+      default_on: true                             # Run by default for all requests
+      api_endpoint: "https://modelarmor.googleapis.com"
