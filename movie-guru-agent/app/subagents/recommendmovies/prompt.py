@@ -13,22 +13,4 @@ AGENT_INSTRUCTION = """
         * Use the 'load_memory' tool if the answer might be in past conversations.
         * If you find preferences for the user, then use those preferences to refine the movies search when calling the tool 'search_movies_by_embedding'.
         * Use the conversation_analysis_agent tool to analyse the conversation
-        
-        Return your response *exclusively* as a single JSON object if movies were found. This object should contain a top-level key, "movies", which holds a list of movie object. Each movie object in the list must strictly adhere to the following structure:
-
-        --json--
-        {
-          "name": "Name of the movie",
-          "released": "Year of release",
-          "plot": "Summary of plot",
-          "rating": "Rating of the movie", 
-          "poster": "Movie poster",
-        }
-        
-        If no movies was found, then return the following json: 
-        
-        --json--
-        {
-            "response": "**Ask the user for more information or reply that no movies were found that matched the user's prompt**"
-        }
     """
