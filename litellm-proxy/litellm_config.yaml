@@ -32,6 +32,18 @@ litellm_settings:
   set_verbose: false
   json_logs: true
   callbacks: ["otel"]
+  cache: true
+  cache_params:
+    type: "redis"
+    similarity_threshold: 0.8
+    redis_startup_nodes: [{"host": os.environ/REDIS_HOST, "port": os.environ/REDIS_PORT}]
+    host: os.environ/REDIS_HOST
+    port: os.environ/REDIS_PORT
+
+prompt_cache:
+  type: "redis"
+  host: os.environ/REDIS_HOST
+  port: os.environ/REDIS_PORT
 
 guardrails:
   - guardrail_name: model-armor-shield

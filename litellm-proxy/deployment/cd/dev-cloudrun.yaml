@@ -56,7 +56,7 @@ steps:
       - "--service-account" 
       - "movie-guru-chat-server-sa@${PROJECT_ID}.iam.gserviceaccount.com"
       - "--set-env-vars" 
-      - 'GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GOOGLE_CLOUD_LOCATION=${_REGION},VERTEX_AI_PROJECT_ID=${PROJECT_ID},VERTEX_AI_LOCATION=${_REGION},OLLAMA_API_BASE=${_OLLAMA_API_BASE}'
+      - 'GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GOOGLE_CLOUD_LOCATION=${_REGION},VERTEX_AI_PROJECT_ID=${PROJECT_ID},VERTEX_AI_LOCATION=${_REGION},OLLAMA_API_BASE=${_OLLAMA_API_BASE},REDIS_HOST=${_REDIS_HOST},REDIS_PORT=${_REDIS_PORT}'
       - "--startup-probe"
       - 'initialDelaySeconds=30,tcpSocket.port=8080,timeoutSeconds=240,periodSeconds=240,failureThreshold=1'
       - "--max-instances" 
@@ -86,6 +86,8 @@ substitutions:
   _CLOUD_RUN_APP_SA_EMAIL: "movie-guru-chat-server-sa@${PROJECT_ID}.iam.gserviceaccount.com"
   _COMMIT_SHA: ${_COMMIT_SHA}
   _OLLAMA_API_BASE: "https://ollama-gemma-${PROJECT_NUMBER}.${_REGION}.run.app"
+  _REDIS_HOST: "10.3.0.2"
+  _REDIS_PORT: "6379"
 
 images:
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/$_ARTIFACT_REGISTRY_REPO_NAME/$_CONTAINER_NAME:${_COMMIT_SHA}  
