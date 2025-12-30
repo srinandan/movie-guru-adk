@@ -14,14 +14,6 @@ model_list:
       vertex_ai_project: os.environ/GOOGLE_CLOUD_PROJECT
       vertex_ai_location: os.environ/GOOGLE_CLOUD_LOCATION
 
-  - model_name: gpt-oss-20b-maas
-    litellm_params:
-      model: vertex_ai/openai/gpt-oss-20b-maas
-      api_key: os.environ/GEMINI_API_KEY
-      reasoning_effort: "low"  # Options: "minimal", "low", "medium", "high"
-      vertex_ai_project: os.environ/GOOGLE_CLOUD_PROJECT
-      vertex_ai_location: os.environ/GOOGLE_CLOUD_LOCATION
-
   - model_name: gemini-2.0-flash-lite
     litellm_params:
       model: vertex_ai/gemini-2.0-flash-lite
@@ -29,11 +21,17 @@ model_list:
       vertex_ai_project: os.environ/GOOGLE_CLOUD_PROJECT
       vertex_ai_location: os.environ/GOOGLE_CLOUD_LOCATION
 
+  - model_name: ollama-gemma3-4b
+    litellm_params:
+      model: ollama/gemma3:4b
+      api_base: os.environ/OLLAMA_API_BASE
+
 litellm_settings:
   drop_params: true
   request_timeout: 60
   set_verbose: false
   json_logs: true
+  callbacks: ["otel"]
 
 guardrails:
   - guardrail_name: model-armor-shield

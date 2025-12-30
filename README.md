@@ -17,6 +17,7 @@ The application is composed of the following core components:
 * **`movie-guru-loadgen/`**: A Go-based load generation tool that constantly sends requests to the `movie-guru-agent` server for performance testing.
 * **`ollama/`**: Contains deployment configurations for running local models like `gemma3:4b` via Ollama for local development and execution.
 * **`movie-guru-ax-subagent/`** (Analysis Agent): An ADK-based A2A sub-agent that analyzes conversation sentiment to generate a customer satisfaction metric.
+* **`litellm-proxy/`**: A proxy server for serving models from Vertex AI or self-hosted models.
 
 ## Technology Stack
 
@@ -40,6 +41,7 @@ The application is composed of the following core components:
     ├── app/            # Main application logic
     └── deployment/     # GCP deployment scripts
 ├── ollama/             # Ollama deployment for local models
+├── litellm-proxy/      # Litellm proxy
 ```
 
 ## Getting Started
