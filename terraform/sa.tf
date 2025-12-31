@@ -17,7 +17,7 @@ resource "google_service_account" "sa" {
   account_id   = "movie-guru-chat-server-sa"
   display_name = "movie-guru-chat-server-sa"
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false
   }
 }
 

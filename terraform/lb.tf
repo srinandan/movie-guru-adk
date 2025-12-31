@@ -13,7 +13,7 @@
 # limitations under the License.
 
 resource "google_compute_url_map" "urlmap" {
-  name        = "urlmap"
+  name        = "movie-guru-lb"
   description = "Movie Guru Load Balancer"
   default_service = module.lb-http.backend_services.default.id
   host_rule {
@@ -25,19 +25,19 @@ resource "google_compute_url_map" "urlmap" {
     default_service = module.lb-http.backend_services.default.id
     path_rule {
       paths   = ["/sessions"]
-      service = module.lb-http.backend_services.movie_guru_chatbot.id
+      service = module.lb-http.backend_services.movie-guru-chatbot.id
     }
     path_rule {
       paths   = ["/random"]
-      service = module.lb-http.backend_services.movie_guru_chatbot.id
+      service = module.lb-http.backend_services.movie-guru-chatbot.id
     }
     path_rule {
       paths   = ["/sessions/*"]
-      service = module.lb-http.backend_services.movie_guru_chatbot.id
+      service = module.lb-http.backend_services.movie-guru-chatbot.id
     }
     path_rule {
       paths   = ["/run"]
-      service = module.lb-http.backend_services.movie_guru_chatbot.id
+      service = module.lb-http.backend_services.movie-guru-chatbot.id
     }    
   }
 }
@@ -64,7 +64,7 @@ module "lb-http" {
         enable = false
       }
     }
-    movie_guru_chatbot = {
+    movie-guru-chatbot = {
       description = null
       groups = [
         {
@@ -85,7 +85,7 @@ module "lb-http" {
   ssl                       = true
   create_ssl_certificate    = false
   random_certificate_suffix = false
-  http_forward              = true
+  http_forward              = false
   ssl_certificates = [
     google_compute_managed_ssl_certificate.default.id
   ]
