@@ -28,49 +28,43 @@ The application is composed of the following core components:
 ## Repository Structure
 
 ```sh
-.
-├── movie-chatbot/      # Vue.js frontend for the chatbot UI
-├── a2atest/            # ADK-based A2A test client
-├── movie-guru-agent/   # Core Python backend agent and sub-agents
-│   ├── app/            # Main application logic
-│   ├── deployment/     # GCP deployment scripts (Terraform, Cloud Deploy)
-│   └── ...
+├── movie-chatbot/          # Vue.js frontend for the chatbot UI
+├── a2atest/                # ADK-based A2A test client
+├── movie-guru-agent/       # Core Python backend agent and sub-agents
+│   ├── app/                # Main application logic
+│   └── deployment/         # Deploy Cloud Run service
 ├── movie-guru-ax-subagent/ # A2A sub-agent for conversation analysis
-├── movie-guru-loadgen/ # Go-based load generation server
-└── movie-guru-tools/   # Supporting Python services
-    ├── app/            # Main application logic
-    └── deployment/     # GCP deployment scripts
-├── ollama/             # Ollama deployment for local models
-├── litellm-proxy/      # Litellm proxy
+    └── deployment/         # Deploy Cloud Run service
+├── movie-guru-loadgen/     # Go-based load generation server
+└── movie-guru-tools/       # Supporting Python services
+    ├── app/                # Main application logic
+    └── deployment/         # Deploy Cloud Run service
+├── ollama/                 # Ollama deployment for local models
+├── litellm-proxy/          # Litellm proxy
+    └── deployment/         # Deploy Cloud Run service
+└── terraform/              # Terraform scripts for provisioning
+    └── movies-data/        # Movies data
 ```
 
 ## Getting Started
 
+The application is designed to be deployed on Google Cloud Platform. The [terraform](./terraform/README.md) directory contains Terraform scripts for provisioning the necessary infrastructure (e.g., Cloud SQL, GCS, Artifact Registry).
+
+```sh
+cd terraform && make worker-pool && make backend
+cd movies-data && make backend
+```
+
 To get the full application running, you will need to set up each component individually. Please refer to the `README.md` file within each component's directory for specific setup and development instructions.
 
-* [movie-chatbot/README.md](./movie-chatbot/README.md)
-* [movie-guru-agent/README.md](./movie-guru-agent/README.md)
-* [movie-guru-tools/README.md](./movie-guru-tools/README.md)
-* [a2atest/README.md](./a2atest/README.md)
-* [movie-guru-loadgen/README.md](./movie-guru-loadgen/README.md)
-* [ollama/README.md](./ollama/README.md)
-* [movie-guru-ax-subagent/README.md](./movie-guru-ax-subagent/README.md)
+* [movie-chatbot/README.md](./movie-chatbot/README.md): `cd movie-chatbot && make backend`
+* [movie-guru-agent/README.md](./movie-guru-agent/README.md): `cd movie-guru-agent && make backend`
+* [movie-guru-tools/README.md](./movie-guru-tools/README.md): `cd movie-guru-tools && make backend`
+* [a2atest/README.md](./a2atest/README.md): `cd a2atest && make backend`
+* [movie-guru-loadgen/README.md](./movie-guru-loadgen/README.md): `cd movie-guru-loadgen && make backend`
+* [ollama/README.md](./ollama/README.md): `cd ollama && make backend`
+* [movie-guru-ax-subagent/README.md](./movie-guru-ax-subagent/README.md): `cd movie-guru-ax-subagent && make backend`
 
-## Deployment
-
-### Infrastructure
-
-The application is designed to be deployed on Google Cloud Platform. The `terraform` directory contains Terraform scripts for provisioning the necessary infrastructure (e.g., Cloud SQL, GCS, Artifact Registry).
-
-### Application
-
-Deploy each component using the Makefile (`make backend`) in the following directories:
-
-* `movie-chatbot Frontend`: `cd movie-chatbot && make backend`
-* `movie-guru-agent Backend`: `cd movie-guru-agent && make backend`
-* `movie-guru-tools Backend`: `cd movie-guru-tools && make backend`
-* `movie-guru-ax-subagent Backend`: `cd movie-guru-ax-subagent && make backend`
-* `litellm-proxy Backend`: `cd litellm-proxy && make backend`
 
 ## Contributing
 
