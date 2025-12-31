@@ -26,6 +26,13 @@ model_list:
       model: ollama/gemma3:4b
       api_base: os.environ/OLLAMA_API_BASE
 
+  - model_name: text-embedding-004
+    litellm_params:
+      model: vertex_ai/text-embedding-004
+      api_key: os.environ/GEMINI_API_KEY
+      vertex_ai_project: os.environ/GOOGLE_CLOUD_PROJECT
+      vertex_ai_location: os.environ/GOOGLE_CLOUD_LOCATION
+
 litellm_settings:
   drop_params: true
   request_timeout: 60
