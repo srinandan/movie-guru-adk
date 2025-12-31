@@ -14,7 +14,7 @@
 
 module "cloud_run_movie_guru_agent" {
   source  = "GoogleCloudPlatform/cloud-run/google//modules/v2"
-  version = "~> 0.16"
+  version = "~> 0.22"
 
   service_name           = "movie-guru-agent"
   project_id             = var.project_id
@@ -34,7 +34,7 @@ module "cloud_run_movie_guru_agent" {
 
 module "cloud_run_movie_guru_chatbot" {
   source  = "GoogleCloudPlatform/cloud-run/google//modules/v2"
-  version = "~> 0.16"
+  version = "~> 0.22"
 
   service_name           = "movie-guru-chatbot"
   project_id             = var.project_id

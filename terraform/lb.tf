@@ -44,7 +44,7 @@ resource "google_compute_url_map" "urlmap" {
 
 module "lb-http" {
   source  = "terraform-google-modules/lb-http/google//modules/serverless_negs"
-  version = "~> 12.0"
+  version = "~> 14.0"
   name    = "movie-guru-lb"
   project = var.project_id
   load_balancing_scheme = "EXTERNAL_MANAGED"

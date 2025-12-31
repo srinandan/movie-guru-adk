@@ -30,7 +30,7 @@ resource "random_password" "postgres_user_password" {
 
 module "pg" {
   source           = "terraform-google-modules/sql-db/google//modules/postgresql"
-  version          = "~> 23.0"
+  version          = "~> 27.0"
   name             = var.app_name
   project_id       = var.project_id
   database_version = "POSTGRES_15"
@@ -84,7 +84,7 @@ resource "google_sql_user" "users" {
 
 module "secret-manager" {
   source     = "GoogleCloudPlatform/secret-manager/google"
-  version    = "~> 0.4"
+  version    = "~> 0.9"
   project_id = var.project_id
   secrets = [
     {
@@ -96,4 +96,5 @@ module "secret-manager" {
       secret_data = random_password.postgres_password.result
     }
   ]
+  depends_on = [google_project_service.enable_apis]
 }
