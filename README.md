@@ -19,12 +19,6 @@ The application is composed of the following core components:
 * **`movie-guru-ax-subagent/`** (Analysis Agent): An ADK-based A2A sub-agent that analyzes conversation sentiment to generate a customer satisfaction metric.
 * **`litellm-proxy/`**: A proxy server for serving models from Vertex AI or self-hosted models.
 
-## Technology Stack
-
-* **Frontend**: Vue.js, Vite
-* **Backend**: Python
-* **Infrastructure & Deployment**: Cloud Run
-
 ## Repository Structure
 
 ```sh
@@ -34,14 +28,15 @@ The application is composed of the following core components:
 │   ├── app/                # Main application logic
 │   └── deployment/         # Deploy Cloud Run service
 ├── movie-guru-ax-subagent/ # A2A sub-agent for conversation analysis
-    └── deployment/         # Deploy Cloud Run service
+│   └── deployment/         # Deploy Cloud Run service
 ├── movie-guru-loadgen/     # Go-based load generation server
-└── movie-guru-tools/       # Supporting Python services
-    ├── app/                # Main application logic
-    └── deployment/         # Deploy Cloud Run service
+├── movie-guru-tools/       # Supporting Python services
+│   ├── app/                # Main application logic
+│   └── deployment/         # Deploy Cloud Run service
 ├── ollama/                 # Ollama deployment for local models
+│   └── deployment/         # Deploy Cloud Run service
 ├── litellm-proxy/          # Litellm proxy
-    └── deployment/         # Deploy Cloud Run service
+│   └── deployment/         # Deploy Cloud Run service
 └── terraform/              # Terraform scripts for provisioning
     └── movies-data/        # Movies data
 ```
