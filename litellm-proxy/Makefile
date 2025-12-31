@@ -2,10 +2,11 @@ PROJECT_ID ?= $(shell gcloud config get-value project)
 PROJECT_NUMBER ?= $(shell gcloud projects describe ${PROJECT_ID} --format="value(projectNumber)")
 REGION ?= us-central1
 _COMMIT_SHA ?= $(shell echo | sha256sum | cut -c 1-10)
+pwd := $(shell pwd)
 
 local:
 	docker run -it --rm --name litellm-proxy \
-	-v /usr/local/google/home/srinandans/workspace/litellm/litellm_config.yaml:/app/config.yaml \
+	-v ${pwd}/local_config.yaml:/app/config.yaml \
 	-e GEMINI_API_KEY=${GEMINI_API_KEY} \
 	-e VERTEXAI_PROJECT=${GOOGLE_CLOUD_PROJECT} \
 	-e VERTEXAI_LOCATION=${GOOGLE_CLOUD_LOCATION} \
