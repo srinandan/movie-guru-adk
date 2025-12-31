@@ -26,9 +26,6 @@ from google.adk.cli.fast_api import get_fast_api_app
 from google.adk.sessions import DatabaseSessionService, Session
 from google.adk.memory import InMemoryMemoryService
 from google.adk.events import Event
-
-# from opentelemetry import trace
-
 from app.utils.gcs import create_bucket_if_not_exists
 from app.utils.context import user_id_context
 
@@ -46,13 +43,6 @@ create_bucket_if_not_exists(bucket_name=bucket_name,
 
 posters_bucket_name = f"{PROJECT_ID}_posters"
 
-os.environ['GOOGLE_CLOUD_QUOTA_PROJECT']=f"{PROJECT_ID}"
-os.environ['OTEL_RESOURCE_ATTRIBUTES'] = f"gcp.project_id={PROJECT_ID}"
-os.environ['OTEL_SERVICE_NAME']="movie-guru-agent"
-os.environ['OTEL_TRACES_EXPORTER']="otlp"
-os.environ['OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT']="512"
-os.environ['OTEL_EXPORTER_OTLP_ENDPOINT']="https://telemetry.googleapis.com"
-
 
 AGENT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # "sqlite:///./sessions.db"
@@ -60,7 +50,6 @@ SESSION_DB_URL = (
     f"postgresql+pg8000://postgres:{DB_PASSWORD}@{DB_HOST}:5432/{DB_NAME}")
 
 db_conn = None
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -94,10 +83,9 @@ app: FastAPI = get_fast_api_app(
 app.title = "movie-guru-agent"
 
 @app.middleware("http")
-async def add_root_span_for_request(request: Request, call_next):
+async def store_user_id_in_context(request: Request, call_next):
     """
-    This middleware creates a parent trace span for each incoming request,
-    and sets the user ID in a context variable for the request.
+    This middleware stores the user ID in a context variable for the request.
     This helps in grouping all the operations for a single request under one trace.
     """
     user_id = "fake"
@@ -111,22 +99,10 @@ async def add_root_span_for_request(request: Request, call_next):
             user_id_context.set(user_id)
 
     try:
-        # The tracer name can be any string. Using the module name is a common practice.
-        #tracer = trace.get_tracer(__name__)
-        #span_name = f"HTTP {request.method} {request.url.path}"
-
-        #with tracer.start_as_current_span(span_name) as span:
-        #    # Add attributes to the span for more context in Cloud Trace.
-        #    span.set_attribute("http.method", request.method)
-        #    span.set_attribute("http.url", str(request.url))
-        #    span.set_attribute("user.id", user_id)
-        #    span.set_attribute("service.name", "movie-guru-agent")
         response = await call_next(request)
-        #    span.set_attribute("http.status_code", response.status_code)
         return response
     finally:
         logger.log(f"User ID set in context: {user_id}")
-
 
 @app.post("/sessions")
 async def start_user_session(

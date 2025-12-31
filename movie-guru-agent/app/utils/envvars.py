@@ -34,6 +34,15 @@ POSTER_DIRECTORY = os.environ.setdefault("POSTER_DIRECTORY", "/mnt")
 
 A2A_CONV_AGENT = os.environ.setdefault("A2A_CONV_AGENT", "localhost:8083")
 
+os.environ['GOOGLE_CLOUD_QUOTA_PROJECT']=f"{PROJECT_ID}"
+os.environ['OTEL_RESOURCE_ATTRIBUTES'] = f"gcp.project_id={PROJECT_ID}"
+os.environ['OTEL_SERVICE_NAME']="movie-guru-agent"
+os.environ['OTEL_TRACES_EXPORTER']="otlp"
+os.environ['OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT']="512"
+os.environ['OTEL_EXPORTER_OTLP_ENDPOINT']="https://telemetry.googleapis.com"
+os.environ['OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED']="true"
+os.environ['OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT']="true"
+
 def get_gcp_project_number() -> str | None:
     """
     Retrieves the GCP Project Number given a Project ID.

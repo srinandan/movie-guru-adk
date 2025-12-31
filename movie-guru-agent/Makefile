@@ -19,6 +19,14 @@ backend:
 local-backend:
 	uv run uvicorn app.server:app --host 0.0.0.0 --port 8000 --reload
 
+docker:
+	export _COMMIT_SHA=${_COMMIT_SHA} ;\
+	export REGION=${REGION} ;\
+	export PROJECT_ID=${PROJECT_ID} ;\
+	export PROJECT_NUMBER=${PROJECT_NUMBER} ;\
+	docker build -t ${REGION}-docker.pkg.dev/${PROJECT_ID}/movie-guru/movie-guru-agent:${_COMMIT_SHA} . ;\
+	docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/movie-guru/movie-guru-agent:${_COMMIT_SHA}
+
 setup-dev-env:
 	PROJECT_ID=$$(gcloud config get-value project) && \
 	(cd deployment/terraform/dev && terraform init && terraform apply --var-file vars/env.tfvars --var dev_project_id=$$PROJECT_ID --auto-approve)
