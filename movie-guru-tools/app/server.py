@@ -211,7 +211,8 @@ def search_movies_by_embedding(query_text: str) -> List[Dict[str, Any]]:
     query_embedding = query_embedding_response[0].values
 
     # use litellm to generate embedding
-    # query_embedding = embedding(model=MODEL, query=query_text)
+    # query_embedding_response = embedding(model=MODEL, query=query_text)
+    # query_embedding = query_embedding_response.data[0]['embedding']
 
     results = []
     try:
