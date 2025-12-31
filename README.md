@@ -47,7 +47,8 @@ The application is designed to be deployed on Google Cloud Platform. The [terraf
 
 ```sh
 cd terraform && make worker-pool && make backend
-cd movies-data && make backend
+cd movies-data && make backend && cd ..
+cd movies-posters && gsutil -m cp -r *.png gs://${PROJECT_ID}_posters && cd ..
 ```
 
 To get the full application running, you will need to set up each component individually. Please refer to the `README.md` file within each component's directory for specific setup and development instructions.

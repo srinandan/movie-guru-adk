@@ -64,7 +64,13 @@ make backend
 To deploy the movies data, run:
 
 ```bash
-cd movies-data && make backend
+cd movies-data && make backend && cd ..
+```
+
+### 4. Copy the posters to the GCS bucket
+
+```bash
+cd movies-posters && gsutil -m cp -r *.png gs://${PROJECT_ID}_posters && cd ..
 ```
 
 This command submits a Cloud Build job using `dev-infra.yaml`. Key steps performed by the build:
