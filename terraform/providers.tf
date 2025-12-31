@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# terraform init -backend-config="bucket=${PROJECT_ID}"
-
 terraform {
-  backend "gcs" {
-    prefix = "tfstate/infra"
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "~> 6.18"
+    }
   }
 }

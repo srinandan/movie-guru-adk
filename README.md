@@ -58,12 +58,28 @@ To get the full application running, you will need to set up each component indi
 
 ## Deployment
 
-The application is designed to be deployed on Google Cloud Platform. The `movie-guru-agent/deployment` directory contains Terraform scripts for provisioning the necessary infrastructure (e.g., Cloud Run, GCS, Artifact Registry) and Cloud Deploy YAML files for orchestrating deployments.
+### Infrastructure
+
+The application is designed to be deployed on Google Cloud Platform. The `terraform` directory contains Terraform scripts for provisioning the necessary infrastructure (e.g., Cloud SQL, GCS, Artifact Registry).
+
+### Application
+
+Deploy each component using the Makefile (`make backend`) in the following directories:
+
+* `movie-chatbot Frontend`: `cd movie-chatbot && make backend`
+* `movie-guru-agent Backend`: `cd movie-guru-agent && make backend`
+* `movie-guru-tools Backend`: `cd movie-guru-tools && make backend`
+* `movie-guru-ax-subagent Backend`: `cd movie-guru-ax-subagent && make backend`
+* `litellm-proxy Backend`: `cd litellm-proxy && make backend`
 
 ## Contributing
 
 Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for details on how to contribute to this project.
 
+## Support
+
+This demo is *NOT* endorsed by Google or Google Cloud. The repo is intended for educational/hobbyists use only.
+
 ## License
 
-This project is licensed under the terms of the [LICENSE.txt](./LICENSE.txt) file.
+This project is licensed under the terms of the [LICENSE.txt](./LICENSE.txt) file. The AI generated movie data and posters in the repo are licensed under the Creative Commons Attribution 4.0 International License. To view a copy of this license, visit <http://creativecommons.org/licenses/by/4.0/>

@@ -11,22 +11,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-variable "project_id" {
-  description = "Project ID"
-}
-
-variable "region" {
-  description = "Region. Defaults to us-central1"
-  default     = "us-central1"
-}
-
-variable "db_name" {
-  description = "Database name. Defaults to fake-movies-db"
-  default     = "fake-movies-db"
-}
-
-variable "app_name" {
-  description = "Application name. Defaults to movie-guru"
-  default     = "movie-guru"
-}

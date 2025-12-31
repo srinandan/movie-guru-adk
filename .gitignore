@@ -111,3 +111,5 @@ venv.bak/
 
 requirements.txt
 .requirements.txt
+
+!terraform/movies-data/requirements.txt

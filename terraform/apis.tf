@@ -24,14 +24,9 @@ resource "google_project_service" "enable_apis" {
     "cloudresourcemanager.googleapis.com",
     "storage-api.googleapis.com",
     "run.googleapis.com",
-    "firebase.googleapis.com",
-    "identitytoolkit.googleapis.com",
     "iam.googleapis.com",
-    "cloudidentity.googleapis.com",
     "cloudbilling.googleapis.com",
     "iap.googleapis.com",
-    "compute.googleapis.com",
-    "container.googleapis.com",
     "sqladmin.googleapis.com",
     "secretmanager.googleapis.com",
     "apphub.googleapis.com",
@@ -42,3 +37,4 @@ resource "google_project_service" "enable_apis" {
 
   disable_on_destroy = false
 }
+
