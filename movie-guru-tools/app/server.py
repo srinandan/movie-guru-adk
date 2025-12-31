@@ -34,6 +34,8 @@ from google.auth.transport.grpc import AuthMetadataPlugin
 from google.auth import default, compute_engine
 import grpc
 
+#from litellm import embedding
+
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -52,8 +54,11 @@ PROJECT_ID = os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
 vertexai.init(project=os.getenv("GOOGLE_CLOUD_PROJECT"),
               location=os.getenv("GOOGLE_CLOUD_LOCATION"))
 
+MODEL = os.environ.setdefault("MODEL_NAME", "text-embedding-004")
+os.environ.setdefault("OPENAI_API_KEY", "")
+
 # Load the embedding model
-embedding_model = TextEmbeddingModel.from_pretrained("text-embedding-004")
+embedding_model = TextEmbeddingModel.from_pretrained(MODEL)
 
 top_k = 5
 
@@ -204,6 +209,9 @@ def search_movies_by_embedding(query_text: str) -> List[Dict[str, Any]]:
     query_embedding_response = embedding_model.get_embeddings(
         [query_embedding_input])
     query_embedding = query_embedding_response[0].values
+
+    # use litellm to generate embedding
+    # query_embedding = embedding(model=MODEL, query=query_text)
 
     results = []
     try:
