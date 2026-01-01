@@ -16,7 +16,7 @@ import json
 import logging
 import datetime
 import vertexai
-# from vertexai.language_models import TextEmbeddingInput, TextEmbeddingModel
+from vertexai.language_models import TextEmbeddingInput, TextEmbeddingModel
 import psycopg2
 import os
 from typing import List, Dict, Any, Optional
@@ -51,14 +51,14 @@ PROJECT_ID = os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
 
 
 # Initialize Vertex AI
-#vertexai.init(project=os.getenv("GOOGLE_CLOUD_PROJECT"),
-#              location=os.getenv("GOOGLE_CLOUD_LOCATION"))
+vertexai.init(project=os.getenv("GOOGLE_CLOUD_PROJECT"),
+              location=os.getenv("GOOGLE_CLOUD_LOCATION"))
 
 MODEL = os.environ.setdefault("MODEL_NAME", "text-embedding-004")
 os.environ.setdefault("OPENAI_API_KEY", "")
 
 # Load the embedding model
-# embedding_model = TextEmbeddingModel.from_pretrained(MODEL)
+embedding_model = TextEmbeddingModel.from_pretrained(MODEL)
 
 top_k = 5
 
@@ -204,15 +204,15 @@ def search_movies_by_embedding(query_text: str) -> List[Dict[str, Any]]:
     )
 
     # Generate embedding for the query using Vertex AI
-    # query_embedding_input = TextEmbeddingInput(text=query_text,
-    #                                           task_type="RETRIEVAL_QUERY")
-    # query_embedding_response = embedding_model.get_embeddings(
-    #   [query_embedding_input])
-    # query_embedding = query_embedding_response[0].values
+    query_embedding_input = TextEmbeddingInput(text=query_text,
+                                               task_type="RETRIEVAL_QUERY")
+    query_embedding_response = embedding_model.get_embeddings(
+       [query_embedding_input])
+    query_embedding = query_embedding_response[0].values
 
     # use litellm to generate embedding
-    query_embedding_response = embedding(model=MODEL, query=query_text)
-    query_embedding = query_embedding_response.data[0]['embedding']
+    # query_embedding_response = embedding(model=MODEL, query=query_text)
+    # query_embedding = query_embedding_response.data[0]['embedding']
 
     results = []
     try:
