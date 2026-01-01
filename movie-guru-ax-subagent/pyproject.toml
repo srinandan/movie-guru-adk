@@ -1,7 +1,7 @@
 [project]
 name = "movie-guru-ax-subagent"
 version = "0.1.0"
-description = "Add your description here"
+description = "A subagent for analyzing conversations for movie recommendations"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
