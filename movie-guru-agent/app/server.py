@@ -47,7 +47,7 @@ posters_bucket_name = f"{PROJECT_ID}_posters"
 AGENT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # "sqlite:///./sessions.db"
 SESSION_DB_URL = (
-    f"postgresql+pg8000://postgres:{DB_PASSWORD}@{DB_HOST}:5432/{DB_NAME}")
+    f"postgresql+asyncpg://postgres:{DB_PASSWORD}@{DB_HOST}:5432/{DB_NAME}")
 
 db_conn = None
 
