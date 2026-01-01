@@ -35,11 +35,11 @@ model_list:
 
 litellm_settings:
   drop_params: true
-  request_timeout: 60
+  request_timeout: 30
   set_verbose: false
   json_logs: true
   callbacks: ["otel"]
-  cache: true
+  cache: false
   cache_params:
     type: "redis"
     similarity_threshold: 0.8
@@ -52,6 +52,9 @@ prompt_cache:
   host: os.environ/REDIS_HOST
   port: os.environ/REDIS_PORT
 
+router_settings:
+  fallbacks: [{"gemini-2.0-flash-lite": ["gpt-oss-120b", "gemini-2.5-flash"]}]
+
 guardrails:
   - guardrail_name: model-armor-shield
     litellm_params:
@@ -63,5 +66,5 @@ guardrails:
       mask_request_content: true                   # Enable request content masking
       mask_response_content: false                 # Disable response content masking
       fail_on_error: false                         # Fail request if Model Armor errors (default: true)
-      default_on: true                             # Run by default for all requests
+      default_on: false                            # Run by default for all requests
       api_endpoint: "https://modelarmor.googleapis.com"
