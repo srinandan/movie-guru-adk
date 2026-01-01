@@ -73,20 +73,17 @@ cd movies-data && make backend && cd ..
 cd movies-posters && gsutil -m cp -r *.png gs://${PROJECT_ID}_posters && cd ..
 ```
 
+### 5. Enable IAP
+
+To enable IAP, obtain the OAuth2 client ID and secret from the IAP console and run:
+
+```bash
+gcloud compute backend-services update movie-guru-chatbot --global --iap=enabled,oauth2-client-id=${OAUTH2_CLIENT_ID},oauth2-client-secret=${OAUTH2_CLIENT_SECRET}
+gcloud compute backend-services update movie-guru-agent --global --iap=enabled,oauth2-client-id=${OAUTH2_CLIENT_ID},oauth2-client-secret=${OAUTH2_CLIENT_SECRET}
+```
+
 This command submits a Cloud Build job using `dev-infra.yaml`. Key steps performed by the build:
 1.  **Init**: Initializes Terraform with a GCS backend (`bucket=${PROJECT_ID}`).
 2.  **Apply**: Runs `terraform apply` to create/update resources.
 
-> **Note**: The Terraform state is stored in a GCS bucket named after your Project ID, under the prefix `tfstate/infra`.
 
-## Project Structure
-
-*   `Makefile`: Helper commands for triggering Cloud Build.
-*   `dev-infra.yaml`: Cloud Build configuration for running Terraform.
-*   `backend.tf`: GCS backend configuration.
-*   `network.tf`: VPC, subnets, and IP configurations.
-*   `sql.tf`: Cloud SQL instance and user configuration.
-*   `redis.tf`: Memorystore for Redis Cluster configuration.
-*   `apis.tf`: Enabling of required Google Cloud APIs.
-*   `providers.tf`: Terraform provider versions (Google).
-*   `variables.tf`: Input variable definitions.
