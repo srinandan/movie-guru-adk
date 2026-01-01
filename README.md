@@ -13,7 +13,6 @@ The application is composed of the following core components:
 * **`movie-chatbot/`** (Frontend): A web-based frontend built with Vue.js that provides the user interface for interacting with the chatbot.
 * **`movie-guru-agent/`** (Orchestration Agent): The core backend agent responsible for processing user messages, understanding intent, and providing movie recommendations. It is built in Python and designed as a multi-agent system with sub-agents for conversation analysis, movie recommendations, and user profile management.
 * **`movie-guru-tools/`** (MCP Server): A set of supporting tools and services, also built in Python, that likely provide APIs or utilities consumed by the main agent.
-* **`a2atest/`**: An ADK-based agent-to-agent (A2A) client used to test A2A-enabled agents.
 * **`movie-guru-loadgen/`**: A Go-based load generation tool that constantly sends requests to the `movie-guru-agent` server for performance testing.
 * **`ollama/`**: Contains deployment configurations for running local models like `gemma3:4b` via Ollama for local development and execution.
 * **`movie-guru-ax-subagent/`** (Analysis Agent): An ADK-based A2A sub-agent that analyzes conversation sentiment to generate a customer satisfaction metric.
@@ -22,23 +21,25 @@ The application is composed of the following core components:
 ## Repository Structure
 
 ```sh
-├── movie-chatbot/          # Vue.js frontend for the chatbot UI
-├── a2atest/                # ADK-based A2A test client
-├── movie-guru-agent/       # Core Python backend agent and sub-agents
-│   ├── app/                # Main application logic
-│   └── deployment/         # Deploy Cloud Run service
-├── movie-guru-ax-subagent/ # A2A sub-agent for conversation analysis
-│   └── deployment/         # Deploy Cloud Run service
-├── movie-guru-loadgen/     # Go-based load generation server
-├── movie-guru-tools/       # Supporting Python services
-│   ├── app/                # Main application logic
-│   └── deployment/         # Deploy Cloud Run service
-├── ollama/                 # Ollama deployment for local models
-│   └── deployment/         # Deploy Cloud Run service
-├── litellm-proxy/          # Litellm proxy
-│   └── deployment/         # Deploy Cloud Run service
-└── terraform/              # Terraform scripts for provisioning
-    └── movies-data/        # Movies data
+├── litellm-proxy         # Litellm proxy server
+│   └── deployment
+├── movie-chatbot         # Vue.js frontend for the chatbot UI
+│   ├── deployment
+│   └── src
+├── movie-guru-agent      # Core Python backend agent and sub-agents
+│   ├── app
+│   └── deployment
+├── movie-guru-ax-subagent # A2A sub-agent for conversation analysis
+│   └── deployment
+├── movie-guru-loadgen    # Go-based load generation server
+├── movie-guru-tools      # MCP Server to access Movies Vector database
+│   ├── app
+│   └── deployment
+├── ollama                # Ollama deployment for local models  
+│   └── deployment
+└── terraform
+    ├── movies-data       # Movies data
+    └── movies-posters    # Movies posters
 ```
 
 ## Getting Started
