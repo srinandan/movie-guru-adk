@@ -27,17 +27,11 @@ COPY ./app ./app
 ENV UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy
 
-# Install dependencies using uv sync.
-# --frozen: Ensures uv respects the uv.lock file
-# --no-install-project: Prevents installing the project itself in this stage
-# --no-dev: Excludes development dependencies
-# --mount=type=cache: Leverages Docker's build cache for uv, speeding up repeated builds
-RUN --mount=type=cache,target=/.cache/uv \
-    uv sync --frozen --no-install-project --no-dev
+RUN apt-get update && apt-get install -y \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install the project
-RUN --mount=type=cache,target=/.cache/uv \
-    uv sync --frozen --no-dev
+RUN uv sync --frozen
 
 ENV OTEL_SERVICE_NAME=movie-guru-agent
 ENV OTEL_TRACES_EXPORTER=otlp
