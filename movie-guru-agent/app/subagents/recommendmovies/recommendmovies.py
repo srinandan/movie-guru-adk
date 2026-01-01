@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import logging
-from typing import Optional, Dict, Any
+from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
 
 from google.adk.agents import Agent
@@ -32,22 +32,15 @@ from app.utils.context import user_id_context
 from app.utils.envvars import MCPTOOLSET
 
 from app.subagents.userprofile.userprofile import get_user_profile_agent
-from app.utils.model_armor import sanitize_user_prompt
 from app.subagents.recommendmovies.prompt import AGENT_INSTRUCTION
 
 logging.getLogger("google_adk.google.adk.tools.base_authenticated_tool").setLevel(logging.ERROR)
 
-class RecommendationOutput(BaseModel):
-    name: str = Field(default=None, 
-        description="The name of the movie")
-    released: int = Field(default=None, 
-        description="The year of release of the movie")
-    plot: str = Field(default=None, 
-        description="The plot of the movie")
-    rating: float = Field(default=None, 
-        description="The rating of the movie")
-    poster: str = Field(default=None, 
-        description="The poster of the movie")
+class RecommendationInput(BaseModel):
+    user: str = Field(default=None, 
+        description="The user")
+    query_text: str = Field(default=None, 
+        description="The query")
 
 def get_mcp_url() -> str:
     """Returns the MCP URL."""
@@ -83,7 +76,6 @@ def get_recommender_agent() -> Agent:
                             url=mcp_url
                          ),
                          header_provider=lambda ctx: {'x-user-id':user_id_context.get()},
-                         errlog=logging)
+                         errlog=logging),
                  ],
-#                 output_schema=RecommendationOutput,
                  output_key="recommenderOutput")
