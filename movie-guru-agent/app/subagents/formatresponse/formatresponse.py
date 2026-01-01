@@ -31,7 +31,7 @@ class RecommendationOutput(BaseModel):
         description="The poster of the movie")
 
 class RecommendationsOutput(BaseModel):
-    recommendations: List[RecommendationOutput] = Field(default=None, 
+    movies: List[RecommendationOutput] = Field(default=None, 
         description="An array of recommendations")
 
 def get_formatresponse_agent() -> Agent:
