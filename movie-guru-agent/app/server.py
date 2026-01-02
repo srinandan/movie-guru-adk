@@ -26,6 +26,11 @@ from google.adk.cli.fast_api import get_fast_api_app
 from google.adk.sessions import DatabaseSessionService, Session
 from google.adk.memory import InMemoryMemoryService
 from google.adk.events import Event
+
+import google.adk.telemetry.google_cloud
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
+
 from app.utils.gcs import create_bucket_if_not_exists
 from app.utils.context import user_id_context
 
@@ -68,6 +73,15 @@ async def lifespan(app: FastAPI):
 session_service = DatabaseSessionService(db_url=SESSION_DB_URL)
 
 memory_service = InMemoryMemoryService()  # Initialize MemoryService
+
+def _get_gcp_span_exporter_cloud_trace(credentials):
+    # Use CloudTraceSpanExporter which uses the native Google Cloud Trace API (v2) over gRPC.
+    # This avoids the SSLEOFError seen with the HTTP OTLP exporter and urllib3.
+    # We ignore the passed credentials and let the exporter handle it (it uses ADC).
+    exporter = CloudTraceSpanExporter(project_id=PROJECT_ID)
+    return BatchSpanProcessor(exporter)
+
+google.adk.telemetry.google_cloud._get_gcp_span_exporter = _get_gcp_span_exporter_cloud_trace
 
 app: FastAPI = get_fast_api_app(
     agents_dir=AGENT_DIR,
