@@ -47,7 +47,6 @@ skill = AgentSkill(
     ],
 )
 
-# TODO: set to false when deploying to Agent Engine
 capabilities = AgentCapabilities(streaming=True)
 
 agent_card = AgentCard(
@@ -58,7 +57,5 @@ agent_card = AgentCard(
     default_input_modes=["text"],
     default_output_modes=["application/json"],
     skills=[skill],
-    # TODO: uncomment this for Agent Engine
-    # preferred_transport="HTTP+JSON",
     capabilities=capabilities,
 )

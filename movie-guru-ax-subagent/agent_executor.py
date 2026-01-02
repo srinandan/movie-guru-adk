@@ -118,7 +118,7 @@ class ConversationAnalysisAgentExecutor(AgentExecutor):
                         sentiment = output.sentiment
                         if sentiment:
                             logger.info(f"Sentiment: {sentiment}")
-                            # record_sentiment(sentiment)
+                            record_sentiment(sentiment)
                     except (json.JSONDecodeError, KeyError, TypeError) as e:
                         logger.error(f"Error processing agent output: {e}")
 
