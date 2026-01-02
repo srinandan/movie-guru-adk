@@ -3,6 +3,8 @@ import uuid
 import os
 from typing import Literal
 
+import otel_context_patch  # Add this line
+
 import google.auth
 import google.auth.transport.grpc
 import google.auth.transport.requests
