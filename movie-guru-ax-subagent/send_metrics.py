@@ -51,7 +51,7 @@ def setup_opentelemetry() -> TracerProvider:
             # Required for generic_task -> namespace
             "service.namespace": "default",
             # Required for generic_task -> task_id (must be unique per running instance)
-            SERVICE_INSTANCE_ID: f"worker-{os.getpid()}",
+            SERVICE_INSTANCE_ID: f"worker-{uuid.uuid4()}",
             # Required for generic_task -> location
             "cloud.availability_zone": "global",
             "gcp.project_id": PROJECT_ID,
@@ -85,7 +85,7 @@ def setup_opentelemetry() -> TracerProvider:
         MeterProvider(
             metric_readers=[
                 PeriodicExportingMetricReader(
-                    CloudMonitoringMetricsExporter(), export_interval_millis=5000
+                    CloudMonitoringMetricsExporter(), export_interval_millis=60000
                 )
             ],
             resource=resource,
