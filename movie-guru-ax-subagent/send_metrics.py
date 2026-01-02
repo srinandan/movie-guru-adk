@@ -80,26 +80,24 @@ def setup_opentelemetry() -> TracerProvider:
     trace.set_tracer_provider(tracer_provider)
 
     # Initialize OpenTelemetry MeterProvider
-    # grpc_metrics_exporter = OTLPMetricExporter(
-    #     endpoint=otlp_endpoint, 
-    #     credentials=channel_creds,
-    # )
+    metrics.set_meter_provider(
+        MeterProvider(
+            metric_readers=[
+                PeriodicExportingMetricReader(
+                    CloudMonitoringMetricsExporter(), export_interval_millis=5000
+                )
+            ],
+            resource=resource,
+        )
+    )
 
-    # metrics_reader = PeriodicExportingMetricReader(
-    #     grpc_metrics_exporter,
-    #     export_interval_millis=5000  # Export every 5 seconds
-    # )
+    meter = metrics.get_meter(__name__)
 
-    # meter_provider = MeterProvider(metric_readers=[metrics_reader], resource=resource)
-    # metrics.set_meter_provider(meter_provider)
-
-    # meter = metrics.get_meter("movie-guru.sentiment.meter", "1.0.0")
-
-    # _sentiment_counter = meter.create_counter(
-    #     name="sentiment.analysis.count",
-    #     description="Counts the number of sentiment analysis results by type.",
-    #     unit="1"
-    # )
+    _sentiment_counter = meter.create_counter(
+        name="sentiment.analysis.count",
+        description="Counts the number of sentiment analysis results by type.",
+        unit="1"
+    )
     
     return tracer_provider
 
