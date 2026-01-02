@@ -34,8 +34,6 @@ RUN apt-get update && apt-get install -y \
 RUN uv sync --frozen
 
 ENV OTEL_SERVICE_NAME=movie-guru-agent
-ENV OTEL_TRACES_EXPORTER=otlp
-ENV OTEL_EXPORTER_OTLP_ENDPOINT=https://telemetry.googleapis.com
 
 EXPOSE 8080
 
