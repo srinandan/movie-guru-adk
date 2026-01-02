@@ -75,8 +75,8 @@ app: FastAPI = get_fast_api_app(
     artifact_service_uri=bucket_name,
     session_service_uri=SESSION_DB_URL,
     allow_origins=allow_origins,
-    trace_to_cloud=True,
-    otel_to_cloud=False,
+    trace_to_cloud=False,
+    otel_to_cloud=True,
     lifespan=lifespan,
 )
 

@@ -42,6 +42,7 @@ os.environ['OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT']="512"
 # os.environ['OTEL_EXPORTER_OTLP_ENDPOINT']="https://telemetry.googleapis.com"
 os.environ['OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED']="true"
 os.environ['OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT']="true"
+os.environ['ADK_CAPTURE_MESSAGE_CONTENT_IN_SPANS']="false"
 
 def get_gcp_project_number() -> str | None:
     """

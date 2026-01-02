@@ -34,6 +34,7 @@ RUN apt-get update && apt-get install -y \
 RUN uv sync --frozen
 
 ENV OTEL_SERVICE_NAME=movie-guru-agent
+ENV ADK_CAPTURE_MESSAGE_CONTENT_IN_SPANS=false
 
 EXPOSE 8080
 
