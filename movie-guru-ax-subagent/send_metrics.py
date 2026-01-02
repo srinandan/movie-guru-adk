@@ -9,6 +9,7 @@ import google.auth.transport.requests
 import grpc
 from google.auth.transport.grpc import AuthMetadataPlugin
 from opentelemetry import metrics, trace
+from opentelemetry.exporter.cloud_monitoring import CloudMonitoringMetricsExporter
 from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.metrics import MeterProvider
@@ -16,7 +17,7 @@ from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     PeriodicExportingMetricReader,
 )
-from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+from opentelemetry.sdk.resources import SERVICE_NAME, SERVICE_INSTANCE_ID, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
@@ -33,13 +34,13 @@ def setup_opentelemetry() -> TracerProvider:
     PROJECT_ID = os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
 
     # Set up OpenTelemetry environment variables
+    os.environ['OTEL_EXPORTER_GCP_MONITORING_PROJECT_ID'] = f"{PROJECT_ID}"
     os.environ['GOOGLE_CLOUD_QUOTA_PROJECT'] = f"{PROJECT_ID}"
     os.environ['OTEL_RESOURCE_ATTRIBUTES'] = f"gcp.project_id={PROJECT_ID}"
     os.environ['OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT'] = "512"
     os.environ['OTEL_SERVICE_NAME'] = "conversation-analysis-agent"
     os.environ['OTEL_EXPORTER_OTLP_ENDPOINT'] = "https://telemetry.googleapis.com"
     os.environ['OTEL_TRACES_EXPORTER'] = "otlp"
-    otlp_endpoint = os.environ.get("OTLP_GRPC_ENDPOINT", "https://telemetry.googleapis.com")
 
     # Define the service name
     resource = Resource.create(
@@ -48,7 +49,7 @@ def setup_opentelemetry() -> TracerProvider:
             # Required for generic_task -> namespace
             "service.namespace": "default",
             # Required for generic_task -> task_id (must be unique per running instance)
-            "service.instance_id": str(uuid.uuid4()), 
+            SERVICE_INSTANCE_ID: f"worker-{os.getpid()}",
             # Required for generic_task -> location
             "cloud.availability_zone": "global",
             "gcp.project_id": PROJECT_ID,
@@ -78,26 +79,24 @@ def setup_opentelemetry() -> TracerProvider:
     trace.set_tracer_provider(tracer_provider)
 
     # Initialize OpenTelemetry MeterProvider
-    # grpc_metrics_exporter = OTLPMetricExporter(
-    #     endpoint=otlp_endpoint, 
-    #     credentials=channel_creds,
-    # )
+    metrics.set_meter_provider(
+        MeterProvider(
+            metric_readers=[
+                PeriodicExportingMetricReader(
+                    CloudMonitoringMetricsExporter(), export_interval_millis=5000
+                )
+            ],
+            resource=resource,
+        )
+    )
 
-    # metrics_reader = PeriodicExportingMetricReader(
-    #     grpc_metrics_exporter,
-    #     export_interval_millis=5000  # Export every 5 seconds
-    # )
+    meter = metrics.get_meter(__name__)
 
-    # meter_provider = MeterProvider(metric_readers=[metrics_reader], resource=resource)
-    # metrics.set_meter_provider(meter_provider)
-
-    # meter = metrics.get_meter("movie-guru.sentiment.meter", "1.0.0")
-
-    # _sentiment_counter = meter.create_counter(
-    #     name="sentiment.analysis.count",
-    #     description="Counts the number of sentiment analysis results by type.",
-    #     unit="1"
-    # )
+    _sentiment_counter = meter.create_counter(
+        name="sentiment.analysis.count",
+        description="Counts the number of sentiment analysis results by type.",
+        unit="1"
+    )
     
     return tracer_provider
 
