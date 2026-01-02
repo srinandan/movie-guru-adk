@@ -39,18 +39,18 @@ litellm_settings:
   set_verbose: false
   json_logs: true
   callbacks: ["otel"]
-#  cache: false
-#  cache_params:
-#    type: "redis"
-#    similarity_threshold: 0.8
-#    redis_startup_nodes: [{"host": os.environ/REDIS_HOST, "port": os.environ/REDIS_PORT}]
-#    host: os.environ/REDIS_HOST
-#    port: os.environ/REDIS_PORT
+  cache: false
+  cache_params:
+    type: "redis"
+    similarity_threshold: 0.8
+    redis_startup_nodes: [{"host": os.environ/REDIS_HOST, "port": os.environ/REDIS_PORT}]
+    host: os.environ/REDIS_HOST
+    port: os.environ/REDIS_PORT
 
-#prompt_cache:
-#  type: "redis"
-#  host: os.environ/REDIS_HOST
-#  port: os.environ/REDIS_PORT
+prompt_cache:
+  type: "redis"
+  host: os.environ/REDIS_HOST
+  port: os.environ/REDIS_PORT
 
 router_settings:
   fallbacks: [{"gemini-2.0-flash-lite": ["gpt-oss-120b", "gemini-2.5-flash"]}]
