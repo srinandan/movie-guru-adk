@@ -5,6 +5,11 @@ _COMMIT_SHA ?= $(shell echo | sha256sum | cut -c 1-10)
 
 .PHONY: backend
 
+bucket:
+	export REGION=${REGION} ;\
+	export PROJECT_ID=${PROJECT_ID} ;\
+	gcloud storage buckets create gs://${PROJECT_ID} --location=${REGION} --public-access-prevention --uniform-bucket-level-access
+
 worker-pool:
 	export _COMMIT_SHA=${_COMMIT_SHA} ;\
 	export REGION=${REGION} ;\

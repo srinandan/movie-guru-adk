@@ -41,6 +41,19 @@ The configuration is managed via Terraform variables. Key variables include:
 
 The deployment is automated using **Cloud Build** running in a private worker pool to ensure secure access to VPC resources.
 
+### 0. Initial Setup
+
+First, create the GCS bucket in your project. This is a one-time setup.
+
+```bash
+gcloud config set project ${PROJECT_ID}
+gcloud config set compute/region ${REGION}
+gcloud auth application-default set-quota-project ${PROJECT_ID}
+export REGION=${REGION}
+# this GCS bucket will be used for storing the Terraform state
+make bucket
+```
+
 ### 1. Create Private Worker Pool
 
 First, create the private worker pool in your project. This is a one-time setup.
