@@ -1,21 +1,3 @@
-docker run --name litellm-proxy \
-    -e DATABASE_URL=<database_url> \
-    -e LITELLM_CONFIG_BUCKET_NAME=<bucket_name> \
-    -e LITELLM_CONFIG_BUCKET_OBJECT_KEY="<object_key>> \
-    -e LITELLM_CONFIG_BUCKET_TYPE="gcs" \
-    -p 4000:4000 \
-    docker.litellm.ai/berriai/litellm-database:main-stable --detailed_debug
-
-
-curl http://localhost:4000/v1/chat/completions \
-    -H "Content-Type: application/json" \
-    -d '{
-"model": "gpt-oss-120b",
-"messages": [{"role": "user", "content": "Say this is a test!"}],
-"temperature": 0.7
-}'
-
-
 # Copyright 2025 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
