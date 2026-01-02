@@ -56,6 +56,6 @@ MODEL = os.environ.setdefault("MODEL_NAME", "openai/gemini-2.0-flash-lite")
 os.environ.setdefault("OPENAI_API_KEY", "")
 
 def get_model() -> Any:
-    print(f"using model {os.environ.get("MODEL_NAME")}")
-    model = LiteLlm(model=os.environ.get("MODEL_NAME"))
+    print(f"using model {os.environ.get('MODEL_NAME')}")
+    model = LiteLlm(model=os.environ.get('MODEL_NAME'))
     return model
