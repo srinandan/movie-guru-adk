@@ -20,6 +20,14 @@ backend:
 local-backend:
 	uv run app.server:app --host 0.0.0.0 --port 8080 --reload
 
+docker:
+	export _COMMIT_SHA=${_COMMIT_SHA} ;\
+	export REGION=${REGION} ;\
+	export PROJECT_ID=${PROJECT_ID} ;\
+	export PROJECT_NUMBER=${PROJECT_NUMBER} ;\
+	docker build -t ${REGION}-docker.pkg.dev/${PROJECT_ID}/movie-guru/movie-guru-mcp-server:${_COMMIT_SHA} . ;\
+	docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/movie-guru/movie-guru-mcp-server:${_COMMIT_SHA}
+
 lint:
 	uv run codespell
 	uv run ruff check . --diff

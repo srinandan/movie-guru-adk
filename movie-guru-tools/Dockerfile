@@ -28,6 +28,9 @@ USER myuser
 
 ENV PATH="/home/myuser/.local/bin:$PATH"
 
+RUN pip install opentelemetry-distro opentelemetry-exporter-otlp
+RUN opentelemetry-bootstrap -a install
+
 COPY --chmod=0644 --chown=myuser:myuser ./pyproject.toml ./uv.lock* ./
 
 COPY --chmod=0644 --chown=myuser:myuser ./app ./app
