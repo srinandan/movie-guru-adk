@@ -18,6 +18,9 @@ FROM node:22-alpine
 # Set the working directory in the container
 WORKDIR /app
 
+ARG PROJECT_ID
+ENV VITE_PROJECT_ID=$PROJECT_ID
+
 # Copy package.json and package-lock.json to the working directory
 COPY package*.json index.html *.js ./
 
