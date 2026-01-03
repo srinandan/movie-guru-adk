@@ -20,4 +20,7 @@ resource "google_artifact_registry_repository" "repo" {
   docker_config {
     immutable_tags = false
   }
+  vulnerability_scanning_config {
+    enablement_config = "INHERITED"
+  }
 }
