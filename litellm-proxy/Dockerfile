@@ -15,6 +15,7 @@ ENV OTEL_SERVICE_NAME=litellm-proxy
 ENV OTEL_TRACES_EXPORTER=otlp
 ENV OTEL_EXPORTER_OTLP_ENDPOINT=https://telemetry.googleapis.com
 
+#RUN sed -i 's|exec litellm "$@"|exec opentelemetry-instrument --traces_exporter console --metrics_exporter none --logs_exporter none litellm "$@"|g' /docker/prod_entrypoint.sh
 
 # Expose the necessary port
 EXPOSE 8080/tcp
