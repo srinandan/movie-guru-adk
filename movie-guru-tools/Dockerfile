@@ -17,23 +17,12 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 WORKDIR /code
 
-# Create a non-root user
-RUN adduser --disabled-password --gecos "" myuser
+COPY ./pyproject.toml ./uv.lock* ./
 
-# Change ownership of /code to myuser
-RUN chown -R myuser:myuser /code
-
-# Switch to the non-root user
-USER myuser
-
-ENV PATH="/home/myuser/.local/bin:$PATH"
+COPY ./app ./app
 
 RUN pip install opentelemetry-distro opentelemetry-exporter-otlp
 RUN opentelemetry-bootstrap -a install
-
-COPY --chmod=0644 --chown=myuser:myuser ./pyproject.toml ./uv.lock* ./
-
-COPY --chmod=0644 --chown=myuser:myuser ./app ./app
 
 # Set environment variables for uv:
 # UV_COMPILE_BYTECODE=1: Compiles Python files to .pyc for faster startup
@@ -41,17 +30,12 @@ COPY --chmod=0644 --chown=myuser:myuser ./app ./app
 ENV UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy
 
-# Install dependencies using uv sync.
-# --frozen: Ensures uv respects the uv.lock file
-# --no-install-project: Prevents installing the project itself in this stage
-# --no-dev: Excludes development dependencies
-# --mount=type=cache: Leverages Docker's build cache for uv, speeding up repeated builds
-RUN --mount=type=cache,target=/.cache/uv \
-    uv sync --frozen --no-install-project --no-dev
+RUN apt-get update && apt-get install -y \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install the project
-RUN --mount=type=cache,target=/.cache/uv \
-    uv sync --frozen --no-dev
+RUN uv sync --frozen --no-dev
 
 ENV OTEL_SERVICE_NAME=movie-guru-mcp-server
 ENV OTEL_TRACES_EXPORTER=otlp
@@ -60,4 +44,4 @@ ENV OTEL_EXPORTER_OTLP_ENDPOINT=https://telemetry.googleapis.com
 
 EXPOSE 8080
 
-CMD ["uv", "run", "-m", "app.server"]
+CMD ["uv", "run", "python", "-m", "app.server"]
