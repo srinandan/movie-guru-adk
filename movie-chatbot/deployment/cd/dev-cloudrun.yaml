@@ -16,10 +16,12 @@ steps:
   # Build and Push
   - name: "gcr.io/cloud-builders/docker"
     env:
-      - 'DOCKER_BUILDKIT=1'  
+      - 'DOCKER_BUILDKIT=1'
     args:
       [
         "build",
+        "--build-arg",
+        "PROJECT_ID=${PROJECT_ID}",
         "-t",
         "${_REGION}-docker.pkg.dev/$PROJECT_ID/$_ARTIFACT_REGISTRY_REPO_NAME/$_CONTAINER_NAME:${_COMMIT_SHA}",
         ".",
@@ -41,25 +43,25 @@ steps:
       - "movie-chatbot"
       - "--project"
       - "${PROJECT_ID}"
-      - "--region" 
+      - "--region"
       - "${_REGION}"
       - "--image"
       - "${_REGION}-docker.pkg.dev/$PROJECT_ID/$_ARTIFACT_REGISTRY_REPO_NAME/$_CONTAINER_NAME:${_COMMIT_SHA}"
-      - "--port" 
+      - "--port"
       - "8080"
-      - "--cpu" 
+      - "--cpu"
       - "1000m"
-      - "--memory" 
+      - "--memory"
       - "1Gi"
       - "--concurrency"
       - "10"
-      - "--service-account" 
+      - "--service-account"
       - "movie-guru-chat-server-sa@${PROJECT_ID}.iam.gserviceaccount.com"
-      - "--set-env-vars" 
-      - 'VITE_API_BASE_URL="https://movieguruagent.endpoints.srinandans-next25-demo.cloud.goog,OTEL_SERVICE_NAME=movie-chatbot'
+      - "--set-env-vars"
+      - 'VITE_API_BASE_URL="https://movieguruagent.endpoints.${PROJECT_ID}.cloud.goog,OTEL_SERVICE_NAME=movie-chatbot'
       - "--startup-probe"
       - 'initialDelaySeconds=30,tcpSocket.port=8080,timeoutSeconds=240,periodSeconds=240,failureThreshold=1'
-      - "--max-instances" 
+      - "--max-instances"
       - "1"
       - "--allow-unauthenticated"
       - "--timeout"
@@ -71,7 +73,7 @@ steps:
       - "--network"
       - "movie-guru-network"
       - "--subnet"
-      - "movie-guru-subnet" 
+      - "movie-guru-subnet"
       - "--ingress"
       - "internal-and-cloud-load-balancing"
       - "--labels=appid=movie-guru-adk"
@@ -85,7 +87,7 @@ substitutions:
   _COMMIT_SHA: ${_COMMIT_SHA}
 
 images:
-  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/$_ARTIFACT_REGISTRY_REPO_NAME/$_CONTAINER_NAME:${_COMMIT_SHA}  
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/$_ARTIFACT_REGISTRY_REPO_NAME/$_CONTAINER_NAME:${_COMMIT_SHA}
 
 options:
   pool:
