@@ -1,11 +1,27 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """
 Monkey patch for OpenTelemetry ContextVarsRuntimeContext.detach to handle context mismatch errors.
 This works around "ValueError: <Token ...> was created in a different Context" when using async generators
 with OpenTelemetry instrumentation.
 """
+
 import logging
 
 logger = logging.getLogger(__name__)
+
 
 def patch_opentelemetry_context():
     """
@@ -16,6 +32,7 @@ def patch_opentelemetry_context():
     ContextVarsClass = None
     try:
         from opentelemetry.context.contextvars_context import ContextVarsRuntimeContext
+
         ContextVarsClass = ContextVarsRuntimeContext
     except ImportError:
         pass
@@ -24,12 +41,15 @@ def patch_opentelemetry_context():
     if ContextVarsClass is None:
         try:
             from opentelemetry.context.contextvars_context import ContextVarsContext
+
             ContextVarsClass = ContextVarsContext
         except ImportError:
             pass
 
     if ContextVarsClass is None:
-        logger.warning("Could not import ContextVarsRuntimeContext or ContextVarsContext, skipping OpenTelemetry patch.")
+        logger.warning(
+            "Could not import ContextVarsRuntimeContext or ContextVarsContext, skipping OpenTelemetry patch."
+        )
         return
 
     original_detach = ContextVarsClass.detach
@@ -44,7 +64,10 @@ def patch_opentelemetry_context():
                 raise
 
     ContextVarsClass.detach = safe_detach
-    logger.info(f"Patched OpenTelemetry {ContextVarsClass.__name__}.detach to handle async generator context issues.")
+    logger.info(
+        f"Patched OpenTelemetry {ContextVarsClass.__name__}.detach to handle async generator context issues."
+    )
+
 
 # Apply the patch immediately upon import
 try:

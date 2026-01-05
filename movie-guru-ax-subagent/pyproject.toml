@@ -12,3 +12,10 @@ dependencies = [
     "opentelemetry-exporter-otlp-proto-grpc>=1.37.0",
     "opentelemetry-instrumentation-starlette>=0.58b0",
 ]
+
+[dependency-groups]
+dev = [
+    "codespell>=2.4.1",
+    "mypy>=1.19.1",
+    "ruff>=0.14.10",
+]

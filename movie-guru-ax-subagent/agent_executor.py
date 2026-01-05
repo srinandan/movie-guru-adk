@@ -14,7 +14,6 @@
 
 # agent_executor.py
 import logging
-import os
 import json
 
 from a2a.server.agent_execution import AgentExecutor, RequestContext
@@ -37,14 +36,18 @@ from model import get_model
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
+
 # Conversation schema
 class ConversationOutput(BaseModel):
-    outcome: str = Field(
-        description="Classification of the conversation outcome")
-    sentiment: str = Field(default=None, description="Classification of the user sentiment")
-    reasoning: str = Field(default=None,
-        description="Reasoning for the classification of outcome and sentiment"
+    outcome: str = Field(description="Classification of the conversation outcome")
+    sentiment: str = Field(
+        default=None, description="Classification of the user sentiment"
     )
+    reasoning: str = Field(
+        default=None,
+        description="Reasoning for the classification of outcome and sentiment",
+    )
+
 
 class ConversationAnalysisAgentExecutor(AgentExecutor):
     """Agent executor that uses the ADK to analyze conversations."""
@@ -57,11 +60,10 @@ class ConversationAnalysisAgentExecutor(AgentExecutor):
         self.agent = LlmAgent(
             model=get_model(),
             name="conversation_analysis_agent",
-            description=
-            "Agent to analyze the conversation between the user and agent",
+            description="Agent to analyze the conversation between the user and agent",
             instruction=AGENT_INSTRUCTION,
             output_schema=ConversationOutput,
-            output_key="conversationAnalysisOutput"
+            output_key="conversationAnalysisOutput",
         )
         self.runner = self.runner = Runner(
             app_name=self.agent.name,
@@ -73,7 +75,7 @@ class ConversationAnalysisAgentExecutor(AgentExecutor):
 
     async def cancel(self, context: RequestContext, event_queue: EventQueue):
         raise ServerError(error=UnsupportedOperationError())
-    
+
     async def execute(
         self,
         context: RequestContext,
@@ -81,7 +83,7 @@ class ConversationAnalysisAgentExecutor(AgentExecutor):
     ) -> None:
         if self.agent is None:
             self._init_agent()
-        logger.debug(f'Executing agent {self.agent.name}')
+        logger.debug(f"Executing agent {self.agent.name}")
 
         query = context.get_user_input()
 
@@ -92,21 +94,21 @@ class ConversationAnalysisAgentExecutor(AgentExecutor):
 
         await updater.start_work()
 
-        content = types.Content(role='user', parts=[types.Part(text=query)])
+        content = types.Content(role="user", parts=[types.Part(text=query)])
         session = await self.runner.session_service.get_session(
             app_name=self.runner.app_name,
-            user_id='123',
+            user_id="123",
             session_id=context.context_id,
         ) or await self.runner.session_service.create_session(
             app_name=self.runner.app_name,
-            user_id='123',
+            user_id="123",
             session_id=context.context_id,
         )
 
         async for event in self.runner.run_async(
-            session_id=session.id, user_id='123', new_message=content
+            session_id=session.id, user_id="123", new_message=content
         ):
-            logger.debug(f'Event from ADK {event}')
+            logger.debug(f"Event from ADK {event}")
             if event.is_final_response():
                 parts = event.content.parts
                 if parts:
@@ -122,23 +124,19 @@ class ConversationAnalysisAgentExecutor(AgentExecutor):
                     except (json.JSONDecodeError, KeyError, TypeError) as e:
                         logger.error(f"Error processing agent output: {e}")
 
-                text_parts = [
-                    TextPart(text=part.text) for part in parts if part.text
-                ]
+                text_parts = [TextPart(text=part.text) for part in parts if part.text]
                 await updater.add_artifact(
                     text_parts,
-                    name='result',
+                    name="result",
                 )
                 await updater.complete()
                 break
             await updater.update_status(
-                TaskState.working, message=new_agent_text_message('Working...')
+                TaskState.working, message=new_agent_text_message("Working...")
             )
         else:
-            logger.debug('Agent failed to complete')
+            logger.debug("Agent failed to complete")
             await updater.update_status(
                 TaskState.failed,
-                message=new_agent_text_message(
-                    'Failed to generate a response.'
-                ),
-            )    
+                message=new_agent_text_message("Failed to generate a response."),
+            )
