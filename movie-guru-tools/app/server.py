@@ -13,28 +13,24 @@
 # limitations under the License.
 
 import json
-import logging
 import datetime
 import vertexai
 from vertexai.language_models import TextEmbeddingInput, TextEmbeddingModel
 import psycopg2
 import os
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from pgvector.psycopg2 import register_vector
 from google.cloud import storage
 
 from fastmcp import FastMCP
 from fastmcp.server.dependencies import get_http_headers
 from fastmcp.server.middleware import Middleware, MiddlewareContext
-from fastmcp.exceptions import ToolError
 
 from google import auth
-from google.auth.transport import requests
 from google.auth.transport.grpc import AuthMetadataPlugin
-from google.auth import default, compute_engine
 import grpc
 
-from litellm import embedding
+# from litellm import embedding
 
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
@@ -51,8 +47,10 @@ PROJECT_ID = os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
 
 
 # Initialize Vertex AI
-vertexai.init(project=os.getenv("GOOGLE_CLOUD_PROJECT"),
-              location=os.getenv("GOOGLE_CLOUD_LOCATION"))
+vertexai.init(
+    project=os.getenv("GOOGLE_CLOUD_PROJECT"),
+    location=os.getenv("GOOGLE_CLOUD_LOCATION"),
+)
 
 MODEL = os.environ.setdefault("MODEL_NAME", "text-embedding-004")
 os.environ.setdefault("OPENAI_API_KEY", "")
@@ -64,12 +62,12 @@ top_k = 5
 
 conn = None
 
-os.environ['GOOGLE_CLOUD_QUOTA_PROJECT']=f"{PROJECT_ID}"
-os.environ['OTEL_RESOURCE_ATTRIBUTES'] = f"gcp.project_id={PROJECT_ID}"
-os.environ['OTEL_SERVICE_NAME']="movie-guru-mcp-server"
-os.environ['OTEL_TRACES_EXPORTER']="otlp"
-os.environ['OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT']="512"
-os.environ['OTEL_EXPORTER_OTLP_ENDPOINT']="https://telemetry.googleapis.com"
+os.environ["GOOGLE_CLOUD_QUOTA_PROJECT"] = f"{PROJECT_ID}"
+os.environ["OTEL_RESOURCE_ATTRIBUTES"] = f"gcp.project_id={PROJECT_ID}"
+os.environ["OTEL_SERVICE_NAME"] = "movie-guru-mcp-server"
+os.environ["OTEL_TRACES_EXPORTER"] = "otlp"
+os.environ["OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT"] = "512"
+os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"] = "https://telemetry.googleapis.com"
 
 # Define the service name
 resource = Resource.create(
@@ -86,9 +84,7 @@ request = auth.transport.requests.Request()
 
 # Supply the request and credentials to AuthMetadataPlugin
 # AuthMeatadataPlugin inserts credentials into each request
-auth_metadata_plugin = AuthMetadataPlugin(
-    credentials=credentials, request=request
-)
+auth_metadata_plugin = AuthMetadataPlugin(credentials=credentials, request=request)
 
 # Initialize gRPC channel credentials using the AuthMetadataPlugin
 channel_creds = grpc.composite_channel_credentials(
@@ -110,9 +106,9 @@ if not bucket_name:
     if gcp_project:
         bucket_name = f"{gcp_project}_posters"
 
+
 class TraceMiddleware(Middleware):
     async def on_call_tool(self, context: MiddlewareContext, call_next):
-
         tool_name = context.message.name
 
         # The tracer name can be any string. Using the module name is a common practice.
@@ -131,11 +127,10 @@ class TraceMiddleware(Middleware):
 
 mcp.add_middleware(TraceMiddleware())
 
-def connect_to_movie_db(dbname: str,
-                        user: str,
-                        password: str,
-                        host: str,
-                        port: str = "5432") -> Any:
+
+def connect_to_movie_db(
+    dbname: str, user: str, password: str, host: str, port: str = "5432"
+) -> Any:
     """
     Establishes a connection to a PostgreSQL database with pgvector enabled.
 
@@ -157,7 +152,7 @@ def connect_to_movie_db(dbname: str,
         "user": user,
         "password": password,
         "host": host,
-        "port": port
+        "port": port,
     }
     conn = None
 
@@ -191,23 +186,24 @@ def search_movies_by_embedding(query_text: str) -> List[Dict[str, Any]]:
         db_password = os.getenv("DB_PASSWORD")
         db_host = os.getenv("DB_HOST")
         if db_password is None or db_host is None:
-            raise ValueError(
-                "DB_PASSWORD or DB_HOST environment variable not set.")
-        conn = connect_to_movie_db(dbname="fake-movies-db",
-                                   user="postgres",
-                                   password=db_password,
-                                   host=db_host,
-                                   port="5432")
+            raise ValueError("DB_PASSWORD or DB_HOST environment variable not set.")
+        conn = connect_to_movie_db(
+            dbname="fake-movies-db",
+            user="postgres",
+            password=db_password,
+            host=db_host,
+            port="5432",
+        )
 
     print(
         f"Agent is using Cloud SQL PostgreSQL retrieval tool for query: '{query_text}'"
     )
 
     # Generate embedding for the query using Vertex AI
-    query_embedding_input = TextEmbeddingInput(text=query_text,
-                                               task_type="RETRIEVAL_QUERY")
-    query_embedding_response = embedding_model.get_embeddings(
-       [query_embedding_input])
+    query_embedding_input = TextEmbeddingInput(
+        text=query_text, task_type="RETRIEVAL_QUERY"
+    )
+    query_embedding_response = embedding_model.get_embeddings([query_embedding_input])
     query_embedding = query_embedding_response[0].values
 
     # use litellm to generate embedding
@@ -234,7 +230,8 @@ def search_movies_by_embedding(query_text: str) -> List[Dict[str, Any]]:
                 poster_blob_name = movie_data.get("poster")
                 if poster_blob_name and bucket_name:
                     movie_data["poster"] = generate_download_signed_url_v4(
-                        bucket_name, poster_blob_name)
+                        bucket_name, poster_blob_name
+                    )
                 results.append(movie_data)
 
     except psycopg2.Error as e:
@@ -271,20 +268,21 @@ def get_user_preferences(user: str = "fake") -> dict:
         db_password = os.getenv("DB_PASSWORD")
         db_host = os.getenv("DB_HOST")
         if db_password is None or db_host is None:
-            raise ValueError(
-                "DB_PASSWORD or DB_HOST environment variable not set.")
-        conn = connect_to_movie_db(dbname="fake-movies-db",
-                                   user="postgres",
-                                   password=db_password,
-                                   host=db_host,
-                                   port="5432")
+            raise ValueError("DB_PASSWORD or DB_HOST environment variable not set.")
+        conn = connect_to_movie_db(
+            dbname="fake-movies-db",
+            user="postgres",
+            password=db_password,
+            host=db_host,
+            port="5432",
+        )
 
     try:
         with conn.cursor() as cur:
             # Execute the query
-            query = "SELECT \"preferences\" FROM \"user_preferences\" WHERE \"user\" = %s;"
+            query = 'SELECT "preferences" FROM "user_preferences" WHERE "user" = %s;'
             print(query)
-            cur.execute(query, (user, ))
+            cur.execute(query, (user,))
 
             # Fetch the result
             result = cur.fetchone()
@@ -332,17 +330,16 @@ def create_or_update_user_preferences(preferences: dict) -> bool:
         db_password = os.getenv("DB_PASSWORD")
         db_host = os.getenv("DB_HOST")
         if db_password is None or db_host is None:
-            raise ValueError(
-                "DB_PASSWORD or DB_HOST environment variable not set.")
-        conn = connect_to_movie_db(dbname="fake-movies-db",
-                                   user="postgres",
-                                   password=db_password,
-                                   host=db_host,
-                                   port="5432")
+            raise ValueError("DB_PASSWORD or DB_HOST environment variable not set.")
+        conn = connect_to_movie_db(
+            dbname="fake-movies-db",
+            user="postgres",
+            password=db_password,
+            host=db_host,
+            port="5432",
+        )
     try:
-
         with conn.cursor() as cur:
-
             upsert_query = """
             INSERT INTO "user_preferences" ("user", "preferences")
             VALUES (%s, %s)
@@ -393,13 +390,14 @@ def get_user_recommendations(user: str = "fake") -> dict:
         db_password = os.getenv("DB_PASSWORD")
         db_host = os.getenv("DB_HOST")
         if db_password is None or db_host is None:
-            raise ValueError(
-                "DB_PASSWORD or DB_HOST environment variable not set.")
-        conn = connect_to_movie_db(dbname="fake-movies-db",
-                                   user="postgres",
-                                   password=db_password,
-                                   host=db_host,
-                                   port="5432")
+            raise ValueError("DB_PASSWORD or DB_HOST environment variable not set.")
+        conn = connect_to_movie_db(
+            dbname="fake-movies-db",
+            user="postgres",
+            password=db_password,
+            host=db_host,
+            port="5432",
+        )
 
     results = []
     try:
@@ -407,7 +405,7 @@ def get_user_recommendations(user: str = "fake") -> dict:
             # Execute the query
             query = """SELECT "sessions"."state" -> 'recommenderOutput' FROM "sessions" WHERE "sessions"."user_id" = '%s' AND "sessions"."state" -> 'recommenderOutput' IS NOT NULL LIMIT 5;"""
             print(query)
-            cur.execute(query, (user, ))
+            cur.execute(query, (user,))
 
             # Fetch the result
             rows = cur.fetchall()
@@ -422,9 +420,9 @@ def get_user_recommendations(user: str = "fake") -> dict:
         return []
     return results
 
+
 def generate_download_signed_url_v4(bucket_name, blob_name):
-    """Generates a v4 signed URL for downloading a blob using ADC.
-    """
+    """Generates a v4 signed URL for downloading a blob using ADC."""
     if not blob_name:
         blob_name = "notfound.png"
 
@@ -438,8 +436,7 @@ def generate_download_signed_url_v4(bucket_name, blob_name):
         credentials, project = auth.default()
         credentials.refresh(auth.transport.requests.Request())
 
-        storage_client = storage.Client(credentials=credentials,
-                                        project=project)
+        storage_client = storage.Client(credentials=credentials, project=project)
         bucket = storage_client.bucket(bucket_name)
         blob = bucket.blob(blob_name)
 
@@ -472,13 +469,14 @@ def get_random_movies(user: str = "fake") -> List[Dict[str, Any]]:
         db_password = os.getenv("DB_PASSWORD")
         db_host = os.getenv("DB_HOST")
         if db_password is None or db_host is None:
-            raise ValueError(
-                "DB_PASSWORD or DB_HOST environment variable not set.")
-        conn = connect_to_movie_db(dbname="fake-movies-db",
-                                   user="postgres",
-                                   password=db_password,
-                                   host=db_host,
-                                   port="5432")
+            raise ValueError("DB_PASSWORD or DB_HOST environment variable not set.")
+        conn = connect_to_movie_db(
+            dbname="fake-movies-db",
+            user="postgres",
+            password=db_password,
+            host=db_host,
+            port="5432",
+        )
 
     print("Agent is using get_random_movies tool.")
 
@@ -496,9 +494,11 @@ def get_random_movies(user: str = "fake") -> List[Dict[str, Any]]:
 
             for row in rows:
                 title, poster_blob_name = row
-                signed_poster_url = generate_download_signed_url_v4(
-                    bucket_name, poster_blob_name
-                ) if poster_blob_name and bucket_name else None
+                signed_poster_url = (
+                    generate_download_signed_url_v4(bucket_name, poster_blob_name)
+                    if poster_blob_name and bucket_name
+                    else None
+                )
                 results.append({"title": title, "poster": signed_poster_url})
 
     except psycopg2.Error as e:

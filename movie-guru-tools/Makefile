@@ -31,5 +31,5 @@ docker:
 lint:
 	uv run codespell
 	uv run ruff check . --diff
-	uv run ruff format . --check --diff
+	uv run ruff format .
 	uv run mypy .
