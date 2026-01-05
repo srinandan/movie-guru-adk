@@ -1,5 +1,7 @@
 # Movie Guru ADK
 
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
 This repository contains the source code for the Movie Guru, an AI-powered movie recommendation chatbot written in ADK.
 
 The project is structured as a monorepo containing three main components: a chatbot frontend, a backend agent, and a supporting tools service.
