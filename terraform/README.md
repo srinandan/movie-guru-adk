@@ -86,7 +86,7 @@ cd movies-data && make backend && cd ..
 cd movies-posters && gsutil -m cp -r *.png gs://${PROJECT_ID}_posters && cd ..
 ```
 
-### 5. Enable IAP
+### 5. Enable IAP (Optional)
 
 To enable IAP, obtain the OAuth2 client ID and secret from the IAP console and run:
 
