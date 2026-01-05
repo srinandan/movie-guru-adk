@@ -22,6 +22,7 @@ _, project_id = google.auth.default()
 PROJECT_ID = os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
 REGION = os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "us-central1")
 
+
 def get_gcp_project_number() -> str | None:
     """
     Retrieves the GCP Project Number given a Project ID.
@@ -35,12 +36,11 @@ def get_gcp_project_number() -> str | None:
     """
     try:
         client = resourcemanager_v3.ProjectsClient()
-        request = resourcemanager_v3.GetProjectRequest(
-            name=f"projects/{PROJECT_ID}")
+        request = resourcemanager_v3.GetProjectRequest(name=f"projects/{PROJECT_ID}")
         project = client.get_project(request=request)
 
         # The project number is part of the 'name' attribute in the format "projects/PROJECT_NUMBER"
-        project_number = project.name.split('/')[-1]
+        project_number = project.name.split("/")[-1]
         return project_number
     except Exception as e:
         print(f"Error getting project number for ID '{PROJECT_ID}': {e}")
@@ -48,14 +48,16 @@ def get_gcp_project_number() -> str | None:
 
 
 PROJECT_NUMBER = get_gcp_project_number()
-API_BASE = os.environ.setdefault("OPENAI_API_BASE", 
-    f"https://litellm-server-{PROJECT_NUMBER}.{REGION}.run.app/v1")
+API_BASE = os.environ.setdefault(
+    "OPENAI_API_BASE", f"https://litellm-server-{PROJECT_NUMBER}.{REGION}.run.app/v1"
+)
 
 # API_BASE = os.environ.setdefault("API_BASE", "http://localhost:4000/v1")
 MODEL = os.environ.setdefault("MODEL_NAME", "openai/gemini-2.0-flash-lite")
 os.environ.setdefault("OPENAI_API_KEY", "")
 
+
 def get_model() -> Any:
     print(f"using model {os.environ.get('MODEL_NAME')}")
-    model = LiteLlm(model=os.environ.get('MODEL_NAME'))
+    model = LiteLlm(model=os.environ.get("MODEL_NAME"))
     return model

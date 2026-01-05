@@ -28,23 +28,23 @@ REGION = os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "us-central1")
 VERTEX_AI = os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
 USER = os.environ.setdefault("USER_ID", "fake")
 MODEL = os.environ.setdefault("MODEL_NAME", "openai/gemini-2.0-flash-lite")
-MODEL_ARMOR_TEMPLATE = os.environ.setdefault("MODEL_ARMOR_TEMPLATE",
-                                             "movie-guru")
+MODEL_ARMOR_TEMPLATE = os.environ.setdefault("MODEL_ARMOR_TEMPLATE", "movie-guru")
 POSTER_DIRECTORY = os.environ.setdefault("POSTER_DIRECTORY", "/mnt")
 
 A2A_CONV_AGENT = os.environ.setdefault("A2A_CONV_AGENT", "localhost:8083")
 
-os.environ['GOOGLE_CLOUD_QUOTA_PROJECT']=f"{PROJECT_ID}"
-os.environ['OTEL_RESOURCE_ATTRIBUTES'] = f"gcp.project_id={PROJECT_ID}"
-os.environ['OTEL_SERVICE_NAME']="movie-guru-agent"
-#os.environ['OTEL_TRACES_EXPORTER']="otlp"
-os.environ['OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT']="512"
-#os.environ['OTEL_EXPORTER_OTLP_ENDPOINT']="https://telemetry.googleapis.com"
-os.environ['OTEL_INSTRUMENTATION_GENAI_UPLOAD_FORMAT']='jsonl'
-os.environ['OTEL_INSTRUMENTATION_GENAI_COMPLETION_HOOK']='upload'
-os.environ['OTEL_SEMCONV_STABILITY_OPT_IN']='gen_ai_latest_experimental'
-os.environ['OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED']="true"
-os.environ['OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT']="true"
+os.environ["GOOGLE_CLOUD_QUOTA_PROJECT"] = f"{PROJECT_ID}"
+os.environ["OTEL_RESOURCE_ATTRIBUTES"] = f"gcp.project_id={PROJECT_ID}"
+os.environ["OTEL_SERVICE_NAME"] = "movie-guru-agent"
+# os.environ['OTEL_TRACES_EXPORTER']="otlp"
+os.environ["OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT"] = "512"
+# os.environ['OTEL_EXPORTER_OTLP_ENDPOINT']="https://telemetry.googleapis.com"
+os.environ["OTEL_INSTRUMENTATION_GENAI_UPLOAD_FORMAT"] = "jsonl"
+os.environ["OTEL_INSTRUMENTATION_GENAI_COMPLETION_HOOK"] = "upload"
+os.environ["OTEL_SEMCONV_STABILITY_OPT_IN"] = "gen_ai_latest_experimental"
+os.environ["OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED"] = "true"
+os.environ["OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT"] = "true"
+
 
 def get_gcp_project_number() -> str | None:
     """
@@ -59,12 +59,11 @@ def get_gcp_project_number() -> str | None:
     """
     try:
         client = resourcemanager_v3.ProjectsClient()
-        request = resourcemanager_v3.GetProjectRequest(
-            name=f"projects/{PROJECT_ID}")
+        request = resourcemanager_v3.GetProjectRequest(name=f"projects/{PROJECT_ID}")
         project = client.get_project(request=request)
 
         # The project number is part of the 'name' attribute in the format "projects/PROJECT_NUMBER"
-        project_number = project.name.split('/')[-1]
+        project_number = project.name.split("/")[-1]
         return project_number
     except Exception as e:
         print(f"Error getting project number for ID '{PROJECT_ID}': {e}")
@@ -73,11 +72,12 @@ def get_gcp_project_number() -> str | None:
 
 PROJECT_NUMBER = get_gcp_project_number()
 MCPTOOLSET = os.environ.setdefault(
-    "MCPTOOLSET_URL",
-    f"movie-guru-mcp-server-{PROJECT_NUMBER}.{REGION}.run.app")
+    "MCPTOOLSET_URL", f"movie-guru-mcp-server-{PROJECT_NUMBER}.{REGION}.run.app"
+)
 
-API_BASE = os.environ.setdefault("OPENAI_API_BASE", 
-    f"https://litellm-server-{PROJECT_NUMBER}.{REGION}.run.app/v1")
+API_BASE = os.environ.setdefault(
+    "OPENAI_API_BASE", f"https://litellm-server-{PROJECT_NUMBER}.{REGION}.run.app/v1"
+)
 
 os.environ.setdefault("OPENAI_API_KEY", "")
 # API_BASE = os.environ.setdefault("OPENAI_API_BASE", "http://localhost:4000/v1")

@@ -13,7 +13,8 @@
 # limitations under the License.
 import uuid
 from typing import (
-    Literal, )
+    Literal,
+)
 
 from google.adk.events.event import Event
 from google.genai.types import Content

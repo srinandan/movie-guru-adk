@@ -18,21 +18,20 @@ from app.utils.model import get_model
 from pydantic import BaseModel, Field
 from typing import List
 
+
 class RecommendationOutput(BaseModel):
-    name: str = Field(default=None, 
-        description="The name of the movie")
-    released: int = Field(default=None, 
-        description="The year of release of the movie")
-    plot: str = Field(default=None, 
-        description="The plot of the movie")
-    rating: float = Field(default=None, 
-        description="The rating of the movie")
-    poster: str = Field(default=None, 
-        description="The poster of the movie")
+    name: str = Field(default=None, description="The name of the movie")
+    released: int = Field(default=None, description="The year of release of the movie")
+    plot: str = Field(default=None, description="The plot of the movie")
+    rating: float = Field(default=None, description="The rating of the movie")
+    poster: str = Field(default=None, description="The poster of the movie")
+
 
 class RecommendationsOutput(BaseModel):
-    movies: List[RecommendationOutput] = Field(default=None, 
-        description="An array of recommendations")
+    movies: List[RecommendationOutput] = Field(
+        default=None, description="An array of recommendations"
+    )
+
 
 def get_formatresponse_agent() -> Agent:
     """Creates and returns the format response agent."""
@@ -42,5 +41,5 @@ def get_formatresponse_agent() -> Agent:
         instruction="Format the response as per the schema in output schema.",
         model=get_model(),
         output_schema=RecommendationsOutput,
-        output_key="formatresponseOutput"
+        output_key="formatresponseOutput",
     )

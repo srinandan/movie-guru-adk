@@ -17,5 +17,4 @@ from contextvars import ContextVar
 from typing import Optional
 
 # Context variable to hold the user ID for the current request.
-user_id_context: ContextVar[Optional[str]] = ContextVar("user_id",
-                                                        default="fake")
+user_id_context: ContextVar[Optional[str]] = ContextVar("user_id", default="fake")

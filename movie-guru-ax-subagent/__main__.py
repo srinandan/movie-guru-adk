@@ -30,14 +30,14 @@ logging.basicConfig()
 
 
 @click.command()
-@click.option('--host', 'host', default='localhost')
-@click.option('--port', 'port', default=8080)
+@click.option("--host", "host", default="localhost")
+@click.option("--port", "port", default=8080)
 def main(host: str, port: int):
     """A2A Server."""
-    
+
     # Initialize OpenTelemetry
     tracer_provider = setup_opentelemetry()
-    
+
     agent_executor = ConversationAnalysisAgentExecutor()
     request_handler = DefaultRequestHandler(
         agent_executor=agent_executor, task_store=InMemoryTaskStore()
@@ -46,9 +46,11 @@ def main(host: str, port: int):
     server = A2AStarletteApplication(agent_card, request_handler)
     starlette_app = server.build()
     # Instrument the starlette app for tracing
-    StarletteInstrumentor().instrument_app(app=starlette_app, tracer_provider=tracer_provider)
+    StarletteInstrumentor().instrument_app(
+        app=starlette_app, tracer_provider=tracer_provider
+    )
     uvicorn.run(starlette_app, host=host, port=port)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

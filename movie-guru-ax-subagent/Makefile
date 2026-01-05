@@ -14,3 +14,9 @@ backend:
 
 local-backend:
 	uv run .
+
+lint:
+	uv run codespell
+	uv run ruff check . --diff
+	uv run ruff format .
+	uv run mypy .

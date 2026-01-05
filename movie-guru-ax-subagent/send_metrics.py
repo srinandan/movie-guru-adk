@@ -1,4 +1,17 @@
-import logging
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import uuid
 import os
 from typing import Literal
@@ -12,13 +25,9 @@ import grpc
 from google.auth.transport.grpc import AuthMetadataPlugin
 from opentelemetry import metrics, trace
 from opentelemetry.exporter.cloud_monitoring import CloudMonitoringMetricsExporter
-from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import (
-    AggregationTemporality,
-    PeriodicExportingMetricReader,
-)
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import SERVICE_NAME, SERVICE_INSTANCE_ID, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -28,21 +37,22 @@ Sentiment = Literal["SENTIMENTPOSITIVE", "SENTIMENTNEGATIVE", "SENTIMENTNEUTRAL"
 
 _sentiment_counter = None
 
+
 def setup_opentelemetry() -> TracerProvider:
     global _sentiment_counter
-    
+
     # Retrieve and store Google application-default credentials
     credentials, project_id = google.auth.default()
     PROJECT_ID = os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
 
     # Set up OpenTelemetry environment variables
-    os.environ['OTEL_EXPORTER_GCP_MONITORING_PROJECT_ID'] = f"{PROJECT_ID}"
-    os.environ['GOOGLE_CLOUD_QUOTA_PROJECT'] = f"{PROJECT_ID}"
-    os.environ['OTEL_RESOURCE_ATTRIBUTES'] = f"gcp.project_id={PROJECT_ID}"
-    os.environ['OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT'] = "512"
-    os.environ['OTEL_SERVICE_NAME'] = "conversation-analysis-agent"
-    os.environ['OTEL_EXPORTER_OTLP_ENDPOINT'] = "https://telemetry.googleapis.com"
-    os.environ['OTEL_TRACES_EXPORTER'] = "otlp"
+    os.environ["OTEL_EXPORTER_GCP_MONITORING_PROJECT_ID"] = f"{PROJECT_ID}"
+    os.environ["GOOGLE_CLOUD_QUOTA_PROJECT"] = f"{PROJECT_ID}"
+    os.environ["OTEL_RESOURCE_ATTRIBUTES"] = f"gcp.project_id={PROJECT_ID}"
+    os.environ["OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT"] = "512"
+    os.environ["OTEL_SERVICE_NAME"] = "conversation-analysis-agent"
+    os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"] = "https://telemetry.googleapis.com"
+    os.environ["OTEL_TRACES_EXPORTER"] = "otlp"
 
     # Define the service name
     resource = Resource.create(
@@ -62,9 +72,7 @@ def setup_opentelemetry() -> TracerProvider:
     request = google.auth.transport.requests.Request()
 
     # Supply the request and credentials to AuthMetadataPlugin
-    auth_metadata_plugin = AuthMetadataPlugin(
-        credentials=credentials, request=request
-    )
+    auth_metadata_plugin = AuthMetadataPlugin(credentials=credentials, request=request)
 
     # Initialize gRPC channel credentials using the AuthMetadataPlugin
     channel_creds = grpc.composite_channel_credentials(
@@ -97,23 +105,25 @@ def setup_opentelemetry() -> TracerProvider:
     _sentiment_counter = meter.create_counter(
         name="sentiment.analysis.count",
         description="Counts the number of sentiment analysis results by type.",
-        unit="1"
+        unit="1",
     )
-    
+
     return tracer_provider
 
 
 def record_sentiment(sentiment: Sentiment):
     """
     Records a single sentiment analysis result as a custom metric.
-    
+
     Args:
         sentiment: The sentiment string, must be one of the predefined types.
     """
     global _sentiment_counter
-    
+
     if _sentiment_counter is None:
-        print("Warning: _sentiment_counter is not initialized. Call setup_opentelemetry() first.")
+        print(
+            "Warning: _sentiment_counter is not initialized. Call setup_opentelemetry() first."
+        )
         return
 
     # These attributes become metric labels in Cloud Monitoring
