@@ -14,8 +14,11 @@
 
 from google.adk.agents import SequentialAgent
 from app.subagents.recommendmovies.recommendmovies import get_recommender_agent
-from app.subagents.conversation_analysis.conversation_analysis import get_conversation_analysis_agent
+from app.subagents.conversation_analysis.conversation_analysis import (
+    get_conversation_analysis_agent,
+)
 from app.subagents.formatresponse.formatresponse import get_formatresponse_agent
+
 
 def get_agent() -> SequentialAgent:
     """Creates and returns the movie guru agent."""
@@ -24,10 +27,9 @@ def get_agent() -> SequentialAgent:
         sub_agents=[
             get_conversation_analysis_agent(),
             get_recommender_agent(),
-#            get_formatresponse_agent(),
+            #            get_formatresponse_agent(),
         ],
-        description=
-        "Executes a sequence of movie conversation analysis, movie recommendations and formatting the response.",
+        description="Executes a sequence of movie conversation analysis, movie recommendations and formatting the response.",
     )
 
 

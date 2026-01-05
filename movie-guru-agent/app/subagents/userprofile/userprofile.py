@@ -23,26 +23,32 @@ from app.subagents.userprofile.prompt import AGENT_INSTRUCTION
 
 
 class UserProfileOutput(BaseModel):
-    justification: str = Field(default=None, 
-        description="The reason about the query was created this way")
-    safetyIssue: bool = Field(default=None, 
-        description="True if the query is considered dangerous")
-    profileChangeRecommendations: list = Field(default=None, 
-        description="A list of profile change recommendations")
+    justification: str = Field(
+        default=None, description="The reason about the query was created this way"
+    )
+    safetyIssue: bool = Field(
+        default=None, description="True if the query is considered dangerous"
+    )
+    profileChangeRecommendations: list = Field(
+        default=None, description="A list of profile change recommendations"
+    )
 
 
-def after_model_callback(callback_context,
-                         llm_response) -> Optional[LlmResponse | None]:
+def after_model_callback(
+    callback_context, llm_response
+) -> Optional[LlmResponse | None]:
     print("after_model_callback - user_profile_agent")
     return None
 
 
 def get_user_profile_agent() -> Agent:
     """Creates and returns the user profile agent."""
-    return Agent(name="user_profile_agent",
-                 model=get_model(),
-                 description="Agent to profile the user's likes and dislikes.",
-                 instruction=AGENT_INSTRUCTION,
-                 output_schema=UserProfileOutput,
-                 output_key="userProfileOutput",
-                 after_model_callback=after_model_callback)
+    return Agent(
+        name="user_profile_agent",
+        model=get_model(),
+        description="Agent to profile the user's likes and dislikes.",
+        instruction=AGENT_INSTRUCTION,
+        output_schema=UserProfileOutput,
+        output_key="userProfileOutput",
+        after_model_callback=after_model_callback,
+    )

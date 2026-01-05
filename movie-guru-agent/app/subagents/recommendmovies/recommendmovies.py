@@ -34,29 +34,37 @@ from app.utils.envvars import MCPTOOLSET
 from app.subagents.userprofile.userprofile import get_user_profile_agent
 from app.subagents.recommendmovies.prompt import AGENT_INSTRUCTION
 
-logging.getLogger("google_adk.google.adk.tools.base_authenticated_tool").setLevel(logging.ERROR)
+logging.getLogger("google_adk.google.adk.tools.base_authenticated_tool").setLevel(
+    logging.ERROR
+)
+
 
 class RecommendationInput(BaseModel):
-    user: str = Field(default=None, 
-        description="The user")
-    query_text: str = Field(default=None, 
-        description="The query")
+    user: str = Field(default=None, description="The user")
+    query_text: str = Field(default=None, description="The query")
+
 
 def get_mcp_url() -> str:
     """Returns the MCP URL."""
     return f"https://{MCPTOOLSET}/sse"
 
+
 def get_session_user_id(
     tool: BaseTool, args: Dict[str, Any], tool_context: ToolContext
 ) -> Optional[Dict]:
     """Inspects/modifies tool args or skips the tool call."""
-    print(f"--- Callback: get_session_user_id running for agent: {tool.name}, tool: {tool_context.agent_name} ---")
+    print(
+        f"--- Callback: get_session_user_id running for agent: {tool.name}, tool: {tool_context.agent_name} ---"
+    )
     print(f"Session user id: {user_id_context.get()}")
     return None
 
+
 async def auto_save_session_to_memory_callback(callback_context):
     await callback_context._invocation_context.memory_service.add_session_to_memory(
-        callback_context._invocation_context.session)
+        callback_context._invocation_context.session
+    )
+
 
 def get_recommender_agent() -> Agent:
     """Creates and returns the recommender agent."""
@@ -67,20 +75,21 @@ def get_recommender_agent() -> Agent:
 
     user_profile_agent = get_user_profile_agent()
 
-    return Agent(name="recommender_agent",
-                 model=get_model(),
-                 description=
-                 "Agent to recommend movies based on the user's preferences.",
-                 before_tool_callback=get_session_user_id,
-                 instruction=AGENT_INSTRUCTION,
-                 tools=[
-                     AgentTool(agent=user_profile_agent),
-                     load_memory,
-                     MCPToolset(connection_params=SseConnectionParams(
-                            url=mcp_url
-                         ),
-                         header_provider=lambda ctx: {'x-user-id':user_id_context.get()},
-                         errlog=logging),
-                 ],
-                 after_tool_callback=auto_save_session_to_memory_callback,
-                 output_key="recommenderOutput")
+    return Agent(
+        name="recommender_agent",
+        model=get_model(),
+        description="Agent to recommend movies based on the user's preferences.",
+        before_tool_callback=get_session_user_id,
+        instruction=AGENT_INSTRUCTION,
+        tools=[
+            AgentTool(agent=user_profile_agent),
+            load_memory,
+            MCPToolset(
+                connection_params=SseConnectionParams(url=mcp_url),
+                header_provider=lambda ctx: {"x-user-id": user_id_context.get()},
+                errlog=logging,
+            ),
+        ],
+        after_tool_callback=auto_save_session_to_memory_callback,
+        output_key="recommenderOutput",
+    )
