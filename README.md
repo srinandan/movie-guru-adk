@@ -57,7 +57,6 @@ To get the full application running, you will need to set up each component indi
 * [movie-chatbot/README.md](./movie-chatbot/README.md): `cd movie-chatbot && make backend`
 * [movie-guru-agent/README.md](./movie-guru-agent/README.md): `cd movie-guru-agent && make backend`
 * [movie-guru-tools/README.md](./movie-guru-tools/README.md): `cd movie-guru-tools && make backend`
-* [a2atest/README.md](./a2atest/README.md): `cd a2atest && make backend`
 * [movie-guru-loadgen/README.md](./movie-guru-loadgen/README.md): `cd movie-guru-loadgen && make backend`
 * [ollama/README.md](./ollama/README.md): `cd ollama && make backend`
 * [movie-guru-ax-subagent/README.md](./movie-guru-ax-subagent/README.md): `cd movie-guru-ax-subagent && make backend`
