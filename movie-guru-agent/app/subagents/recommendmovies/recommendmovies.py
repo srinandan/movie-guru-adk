@@ -60,12 +60,6 @@ def get_session_user_id(
     return None
 
 
-async def auto_save_session_to_memory_callback(callback_context):
-    await callback_context._invocation_context.memory_service.add_session_to_memory(
-        callback_context._invocation_context.session
-    )
-
-
 def get_recommender_agent() -> Agent:
     """Creates and returns the recommender agent."""
 
@@ -90,6 +84,5 @@ def get_recommender_agent() -> Agent:
                 errlog=logging,
             ),
         ],
-        after_tool_callback=auto_save_session_to_memory_callback,
         output_key="recommenderOutput",
     )
