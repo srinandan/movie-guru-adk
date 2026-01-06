@@ -18,6 +18,8 @@ FROM ghcr.io/berriai/litellm:main-latest
 # Set the working directory to /app
 WORKDIR /app
 
+ARG PROJECT_ID
+
 RUN pip install --upgrade certifi
 RUN pip install opentelemetry-distro opentelemetry-exporter-otlp
 RUN opentelemetry-bootstrap -a install
@@ -27,7 +29,10 @@ COPY litellm_config.yaml .
 
 ENV OTEL_SERVICE_NAME=litellm-proxy
 ENV OTEL_TRACES_EXPORTER=otlp
+ENV OTEL_EXPORTER="otlp_gprc"
+ENV OTEL_ENDPOINT="https://telemetry.googleapis.com"
 ENV OTEL_EXPORTER_OTLP_ENDPOINT=https://telemetry.googleapis.com
+ENV GOOGLE_CLOUD_QUOTA_PROJECT=$PROJECT_ID
 
 #RUN sed -i 's|exec litellm "$@"|exec opentelemetry-instrument --traces_exporter console --metrics_exporter none --logs_exporter none litellm "$@"|g' /docker/prod_entrypoint.sh
 
