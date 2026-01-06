@@ -50,16 +50,22 @@ model_list:
 litellm_settings:
   drop_params: true
   request_timeout: 30
+  turn_off_message_logging: true
+  redact_user_api_key_info: true
   set_verbose: false
   json_logs: true
   callbacks: ["otel"]
-  cache: false
+  cache: true
   cache_params:
     type: "redis"
     similarity_threshold: 0.8
     redis_startup_nodes: [{"host": os.environ/REDIS_HOST, "port": os.environ/REDIS_PORT}]
     host: os.environ/REDIS_HOST
     port: os.environ/REDIS_PORT
+
+callback_settings:
+  otel:
+    message_logging: false
 
 prompt_cache:
   type: "redis"
