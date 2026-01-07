@@ -95,8 +95,7 @@ gcloud compute backend-services update movie-guru-chatbot --global --iap=enabled
 gcloud compute backend-services update movie-guru-agent --global --iap=enabled,oauth2-client-id=${OAUTH2_CLIENT_ID},oauth2-client-secret=${OAUTH2_CLIENT_SECRET}
 ```
 
-This command submits a Cloud Build job using `dev-infra.yaml`. Key steps performed by the build:
-1.  **Init**: Initializes Terraform with a GCS backend (`bucket=${PROJECT_ID}`).
-2.  **Apply**: Runs `terraform apply` to create/update resources.
+### Step 6. Configure IAP Redirect URI
 
+![Client ID](./client-id.png)
 

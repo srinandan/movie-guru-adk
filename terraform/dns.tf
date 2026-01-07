@@ -18,3 +18,36 @@ resource "google_compute_managed_ssl_certificate" "default" {
     domains = ["${var.app_name}.endpoints.${var.project_id}.cloud.goog"]
   }
 }
+
+resource "google_dns_managed_zone" "private-zone" {
+  name        = "runapp"
+  dns_name    = "run.app."
+  description = "Private DNS Zone for Cloud Run"
+
+  visibility = "private"
+
+  private_visibility_config {
+    networks {
+      network_url = google_compute_network.custom.id
+    }
+  }
+}
+
+resource "google_dns_record_set" "cloudrun" {
+  type = "A"
+  ttl  = 300
+
+  name = "run.app"
+
+  managed_zone = google_dns_managed_zone.private-zone.name
+
+  rrdatas = ["199.36.153.8", "199.36.153.9", "199.36.153.10", "199.36.153.11"]
+}
+
+resource "google_dns_record_set" "cname" {
+  name         = "*.run.app"
+  managed_zone = google_dns_managed_zone.private-zone.name
+  type         = "CNAME"
+  ttl          = 300
+  rrdatas      = ["run.app."]
+}

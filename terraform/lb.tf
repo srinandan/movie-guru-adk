@@ -25,19 +25,19 @@ resource "google_compute_url_map" "urlmap" {
     default_service = module.lb-http.backend_services.default.id
     path_rule {
       paths   = ["/sessions"]
-      service = module.lb-http.backend_services.movie-guru-chatbot.id
+      service = module.lb-http.backend_services.movie-guru-agent.id
     }
     path_rule {
       paths   = ["/random"]
-      service = module.lb-http.backend_services.movie-guru-chatbot.id
+      service = module.lb-http.backend_services.movie-guru-agent.id
     }
     path_rule {
       paths   = ["/sessions/*"]
-      service = module.lb-http.backend_services.movie-guru-chatbot.id
+      service = module.lb-http.backend_services.movie-guru-agent.id
     }
     path_rule {
       paths   = ["/run"]
-      service = module.lb-http.backend_services.movie-guru-chatbot.id
+      service = module.lb-http.backend_services.movie-guru-agent.id
     }    
   }
 }
@@ -50,6 +50,21 @@ module "lb-http" {
   load_balancing_scheme = "EXTERNAL_MANAGED"
   backends = {
     default = {
+      description = null
+      groups = [
+        {
+          group = google_compute_region_network_endpoint_group.movie_guru_chatbot_serverless_neg.id
+        }
+      ]
+      enable_cdn = false
+      iap_config = {
+        enable = false
+      }
+      log_config = {
+        enable = false
+      }
+    }
+    movie-guru-agent = {
       description = null
       groups = [
         {
