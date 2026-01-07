@@ -29,6 +29,9 @@ from google.adk.events import Event
 from app.utils.gcs import create_bucket_if_not_exists
 from app.utils.context import user_id_context
 
+from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+
 from app.utils.typing import Feedback
 from app.utils.envvars import (
     PROJECT_ID,
@@ -89,6 +92,9 @@ app: FastAPI = get_fast_api_app(
     otel_to_cloud=True,
     lifespan=lifespan,
 )
+
+HTTPXClientInstrumentor().instrument()
+FastAPIInstrumentor.instrument_app(app)
 
 app.title = "movie-guru-agent"
 
