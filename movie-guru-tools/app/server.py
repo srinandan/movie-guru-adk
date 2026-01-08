@@ -30,7 +30,7 @@ from google import auth
 from google.auth.transport.grpc import AuthMetadataPlugin
 import grpc
 
-# from litellm import embedding
+from litellm import embedding
 
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
@@ -40,16 +40,24 @@ from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
 )
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 
+from .resourcemanager import get_gcp_project_number
+
 mcp = FastMCP("Movie Guru Tools")
 
 _, project_id = auth.default()
 PROJECT_ID = os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
+REGION = os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "us-central1")
 
+PROJECT_NUMBER = get_gcp_project_number(PROJECT_ID)
 
 # Initialize Vertex AI
 vertexai.init(
-    project=os.getenv("GOOGLE_CLOUD_PROJECT"),
-    location=os.getenv("GOOGLE_CLOUD_LOCATION"),
+   project=os.getenv("GOOGLE_CLOUD_PROJECT"),
+   location=os.getenv("GOOGLE_CLOUD_LOCATION"),
+)
+
+API_BASE = os.environ.setdefault(
+    "OPENAI_API_BASE", f"https://litellm-server-{PROJECT_NUMBER}.{REGION}.run.app"
 )
 
 MODEL = os.environ.setdefault("MODEL_NAME", "text-embedding-004")
@@ -207,7 +215,7 @@ def search_movies_by_embedding(query_text: str) -> List[Dict[str, Any]]:
     query_embedding = query_embedding_response[0].values
 
     # use litellm to generate embedding
-    # query_embedding_response = embedding(model=MODEL, query=query_text)
+    # query_embedding_response = embedding(model=MODEL, query=query_text, task_type="RETRIEVAL_QUERY", api_base=API_BASE)
     # query_embedding = query_embedding_response.data[0]['embedding']
 
     results = []

@@ -18,5 +18,5 @@ backend:
 	export _COMMIT_SHA=${_COMMIT_SHA} ;\
 	export REGION=${REGION} ;\
 	export PROJECT_ID=${PROJECT_ID} ;\
-	export PROJECT_NUMBER=${PROJECT_NUMBER} ;\	
+	export PROJECT_NUMBER=${PROJECT_NUMBER} ;\
 	gcloud builds submit --config=deployment/cd/dev-cloudrun.yaml --region=${REGION} --substitutions=_COMMIT_SHA=${_COMMIT_SHA},_REGION=${REGION}
