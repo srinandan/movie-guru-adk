@@ -34,7 +34,7 @@ ENV OTEL_ENDPOINT="https://telemetry.googleapis.com"
 ENV OTEL_EXPORTER_OTLP_ENDPOINT=https://telemetry.googleapis.com
 ENV GOOGLE_CLOUD_QUOTA_PROJECT=$PROJECT_ID
 
-#RUN sed -i 's|exec litellm "$@"|exec opentelemetry-instrument --traces_exporter console --metrics_exporter none --logs_exporter none litellm "$@"|g' /docker/prod_entrypoint.sh
+#RUN sed -i 's|exec litellm "$@"|exec opentelemetry-instrument --traces_exporter console --metrics_exporter none --logs_exporter none litellm "$@"|g' /app/docker/prod_entrypoint.sh
 
 # Expose the necessary port
 EXPOSE 8080/tcp
