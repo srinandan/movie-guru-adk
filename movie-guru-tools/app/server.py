@@ -60,7 +60,13 @@ API_BASE = os.environ.setdefault(
     "OPENAI_API_BASE", f"https://litellm-server-{PROJECT_NUMBER}.{REGION}.run.app"
 )
 
+os.environ.setdefault(
+    "LITELLM_PROXY_API_BASE", f"https://litellm-server-{PROJECT_NUMBER}.{REGION}.run.app"
+)
+
 MODEL = os.environ.setdefault("MODEL_NAME", "text-embedding-004")
+LITELLM_MODEL = os.environ.setdefault("LITELLM_MODEL", f"litellm_proxy/{MODEL}")
+
 os.environ.setdefault("OPENAI_API_KEY", "")
 
 # Load the embedding model
@@ -69,6 +75,9 @@ embedding_model = TextEmbeddingModel.from_pretrained(MODEL)
 top_k = 5
 
 conn = None
+
+os.environ.setdefault("USE_LITELLM_PROXY", "True")
+os.environ.setdefault("LITELLM_PROXY_API_KEY", "fake")
 
 os.environ["GOOGLE_CLOUD_QUOTA_PROJECT"] = f"{PROJECT_ID}"
 os.environ["OTEL_RESOURCE_ATTRIBUTES"] = f"gcp.project_id={PROJECT_ID}"
@@ -215,7 +224,7 @@ def search_movies_by_embedding(query_text: str) -> List[Dict[str, Any]]:
     query_embedding = query_embedding_response[0].values
 
     # use litellm to generate embedding
-    # query_embedding_response = embedding(model=MODEL, query=query_text, task_type="RETRIEVAL_QUERY", api_base=API_BASE)
+    # query_embedding_response = embedding(model=LITELLM_MODEL, query=query_text, task_type="RETRIEVAL_QUERY", api_base=API_BASE)
     # query_embedding = query_embedding_response.data[0]['embedding']
 
     results = []

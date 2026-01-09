@@ -20,6 +20,13 @@ model_list:
       vertex_ai_project: os.environ/GOOGLE_CLOUD_PROJECT
       vertex_ai_location: os.environ/GOOGLE_CLOUD_LOCATION
 
+  - model_name: gemini-2.5-flash-lite
+    litellm_params:
+      model: vertex_ai/gemini-2.5-flash-lite
+      api_key: os.environ/GEMINI_API_KEY
+      vertex_ai_project: os.environ/GOOGLE_CLOUD_PROJECT
+      vertex_ai_location: os.environ/GOOGLE_CLOUD_LOCATION
+
   - model_name: gpt-oss-120b
     litellm_params:
       model: vertex_ai/openai/gpt-oss-120b
