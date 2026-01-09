@@ -84,7 +84,7 @@ substitutions:
   _ARTIFACT_REGISTRY_REPO_NAME: movie-guru
   _CONTAINER_NAME: movie-guru-agent
   _CLOUD_RUN_APP_SA_EMAIL: "movie-guru-chat-server-sa@${PROJECT_ID}.iam.gserviceaccount.com"
-  _MODEL_NAME: "openai/gemini-2.5-flash"
+  _MODEL_NAME: "openai/gemini-2.5-flash-lite"
   _DB_HOST: "10.2.0.2"
   _COMMIT_SHA: ${_COMMIT_SHA}
 
