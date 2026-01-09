@@ -15,16 +15,17 @@
 # agent_executor.py
 import logging
 import json
-
+import os
+import google.auth
 from a2a.server.agent_execution import AgentExecutor, RequestContext
 from a2a.server.events import EventQueue
 from a2a.utils import new_agent_text_message
 from a2a.server.tasks import TaskUpdater
 from a2a.types import TaskState, TextPart, UnsupportedOperationError
 from a2a.utils.errors import ServerError
-from google.adk.artifacts import InMemoryArtifactService
+from google.adk.artifacts import GcsArtifactService
 from google.adk.memory.in_memory_memory_service import InMemoryMemoryService
-from google.adk.sessions import InMemorySessionService
+from google.adk.sessions import DatabaseSessionService
 from google.adk.agents import LlmAgent
 from google.adk import Runner
 from pydantic import BaseModel, Field
@@ -36,6 +37,17 @@ from model import get_model
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
+_, project_id = google.auth.default()
+PROJECT_ID = os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
+
+DB_NAME = "fake-movies-db"
+DB_PASSWORD = os.environ.setdefault("DB_PASSWORD", "changeit")
+DB_HOST = os.environ.setdefault("DB_HOST", "localhost")
+
+SESSION_DB_URL = f"postgresql+asyncpg://postgres:{DB_PASSWORD}@{DB_HOST}:5432/{DB_NAME}"
+
+session_service = DatabaseSessionService(db_url=SESSION_DB_URL)
+artifact_service = GcsArtifactService(bucket_name=f"gs://{PROJECT_ID}")
 
 # Conversation schema
 class ConversationOutput(BaseModel):
@@ -68,8 +80,8 @@ class ConversationAnalysisAgentExecutor(AgentExecutor):
         self.runner = self.runner = Runner(
             app_name=self.agent.name,
             agent=self.agent,
-            artifact_service=InMemoryArtifactService(),
-            session_service=InMemorySessionService(),
+            artifact_service=artifact_service,
+            session_service=session_service,
             memory_service=InMemoryMemoryService(),
         )
 
@@ -87,6 +99,13 @@ class ConversationAnalysisAgentExecutor(AgentExecutor):
 
         query = context.get_user_input()
 
+        # Extract user_id from headers
+        user_id = "fake"
+        if context.call_context and context.call_context.state:
+            headers = context.call_context.state.get("headers", {})
+            user_id = headers.get("x-goog-authenticated-user-email", "fake")
+        logger.info(f"User ID: {user_id}")
+
         updater = TaskUpdater(event_queue, context.task_id, context.context_id)
 
         if not context.current_task:
@@ -97,16 +116,16 @@ class ConversationAnalysisAgentExecutor(AgentExecutor):
         content = types.Content(role="user", parts=[types.Part(text=query)])
         session = await self.runner.session_service.get_session(
             app_name=self.runner.app_name,
-            user_id="123",
+            user_id=user_id,
             session_id=context.context_id,
         ) or await self.runner.session_service.create_session(
             app_name=self.runner.app_name,
-            user_id="123",
+            user_id=user_id,
             session_id=context.context_id,
         )
 
         async for event in self.runner.run_async(
-            session_id=session.id, user_id="123", new_message=content
+            session_id=session.id, user_id=user_id, new_message=content
         ):
             logger.debug(f"Event from ADK {event}")
             if event.is_final_response():
