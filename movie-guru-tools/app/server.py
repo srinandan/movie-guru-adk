@@ -26,6 +26,8 @@ from fastmcp import FastMCP
 from fastmcp.server.dependencies import get_http_headers
 from fastmcp.server.middleware import Middleware, MiddlewareContext
 
+from opentelemetry.instrumentation.mcp import McpInstrumentor
+
 from google import auth
 from google.auth.transport.grpc import AuthMetadataPlugin
 import grpc
@@ -42,6 +44,7 @@ from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 
 from .resourcemanager import get_gcp_project_number
 
+McpInstrumentor().instrument()
 mcp = FastMCP("Movie Guru Tools")
 
 _, project_id = auth.default()

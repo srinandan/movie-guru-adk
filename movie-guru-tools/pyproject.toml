@@ -49,6 +49,7 @@ dependencies = [
     "opentelemetry-exporter-otlp>=1.38.0",
     "opentelemetry-exporter-otlp-proto-grpc>=1.38.0",
     "opentelemetry-instrumentation-fastapi>=0.59b0",
+    "opentelemetry-instrumentation-mcp>=0.50.1",
     "opentelemetry-sdk>=1.38.0",
     "packaging==25.0",
     "pgvector==0.4.1",
