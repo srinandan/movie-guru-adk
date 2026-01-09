@@ -16,11 +16,17 @@
 
 const express = require('express');
 const path = require('path');
+const rateLimit = require('express-rate-limit');
 const app = express();
+
+const splatLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+});
 
 app.use(express.static(path.join(__dirname, 'dist')));
 
-app.get('/{*splat}', (req, res) => {
+app.get('/{*splat}', splatLimiter, (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
