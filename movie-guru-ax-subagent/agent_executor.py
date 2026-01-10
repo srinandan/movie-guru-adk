@@ -103,7 +103,7 @@ class ConversationAnalysisAgentExecutor(AgentExecutor):
         user_id = "fake"
         if context.call_context and context.call_context.state:
             headers = context.call_context.state.get("headers", {})
-            user_id = headers.get("x-goog-authenticated-user-email", "fake")
+            user_id = headers.get("x-user-id", "fake")
         logger.info(f"User ID: {user_id}")
 
         updater = TaskUpdater(event_queue, context.task_id, context.context_id)
