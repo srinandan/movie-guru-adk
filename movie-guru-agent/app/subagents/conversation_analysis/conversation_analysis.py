@@ -13,13 +13,13 @@
 # limitations under the License.
 
 from google.adk.agents.remote_a2a_agent import RemoteA2aAgent
-from app.utils.envvars import A2A_CONV_AGENT
+from app.app_utils.envvars import A2A_CONV_AGENT
 
 
 def get_conversation_analysis_agent() -> RemoteA2aAgent:
     """Creates and returns the conversation analysis agent."""
     return RemoteA2aAgent(
-        name="conversation_analysis_agent_test",
+        name="conversation_analysis_agent",
         description=(
             "Agent to analyze a conversation where the user is asking for movie recommendations"
         ),

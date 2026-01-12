@@ -17,8 +17,8 @@ from google.adk.models import LlmResponse, LlmRequest
 from google.genai import types
 from typing import Optional
 from pydantic import BaseModel, Field
-from app.utils.model import get_model
-from app.utils.logging import logger
+from app.app_utils.model import get_model
+from app.app_utils.logging import logger
 from app.subagents.userprofile.prompt import AGENT_INSTRUCTION
 
 

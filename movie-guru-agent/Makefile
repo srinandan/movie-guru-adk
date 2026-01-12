@@ -1,21 +1,56 @@
-agent-engine:
-	# Export dependencies to requirements file using uv export.
-	uv export --no-hashes --no-header --no-dev --no-emit-project --no-annotate --frozen > .requirements.txt 2>/dev/null || \
-	uv export --no-hashes --no-header --no-dev --no-emit-project --frozen > .requirements.txt && uv run app/agent_engine_app.py --project=$${PROJECT_ID} --set-env-vars="MCPTOOLSET_URL=movie-guru-mcp-server-$${PROJECT_NUMBER}.us-central1.run.app,MODEL=gemini-2.5-flash,DB_HOST=10.2.0.2,A2A_CONV_AGENT=$${REGION-aiplatform.googleapis.com/v1beta1/projects/$${PROJECT_ID}/locations/$${REGION/reasoningEngines/6699794939015856128/a2a"
+PROJECT_ID ?= $(shell gcloud config get-value project)
+PROJECT_NUMBER ?= $(shell gcloud projects describe ${PROJECT_ID} --format="value(projectNumber)")
+REGION ?= us-central1
+MCPTOOLSET_URL ?= $(shell echo movie-guru-mcp-server-${PROJECT_NUMBER}.${REGION}.run.app)
+A2A_CONV_AGENT ?= $(shell echo https://us-central1-aiplatform.googleapis.com/v1beta1/projects/${PROJECT_ID}/locations/${REGION}/reasoningEngines/8025216623881224192/a2a)
 
+# Install dependencies using uv package manager
+install:
+	@command -v uv >/dev/null 2>&1 || { echo "uv is not installed. Installing uv..."; curl -LsSf https://astral.sh/uv/0.8.13/install.sh | sh; source $HOME/.local/bin/env; }
+	uv sync
+
+# ==============================================================================
+# Playground Targets
+# ==============================================================================
+
+# Launch local dev playground
+playground:
+	uv run adk web . --port 8501 --reload_agents
+
+
+# Deploy the agent remotely
+deploy:
+	# Export dependencies to requirements file using uv export.
+	export REGION=${REGION} ;\
+	export PROJECT_ID=${PROJECT_ID} ;\
+	export PROJECT_NUMBER=${PROJECT_NUMBER} ;\
+	export MCPTOOLSET_URL=${MCPTOOLSET_URL} ;\
+	export A2A_CONV_AGENT=${A2A_CONV_AGENT} ;\
+	(uv export --no-hashes --no-header --no-dev --no-emit-project --no-annotate > app/app_utils/.requirements.txt 2>/dev/null || \
+	uv export --no-hashes --no-header --no-dev --no-emit-project > app/app_utils/.requirements.txt) && \
+	uv run -m app.app_utils.deploy \
+		--source-packages=./app \
+		--entrypoint-module=app.agent_engine_app \
+		--entrypoint-object=agent_engine \
+		--set-env-vars=MCPTOOLSET_URL=${MCPTOOLSET_URL},A2A_CONV_AGENT=${A2A_CONV_AGENT} \
+		--requirements-file=app/app_utils/.requirements.txt
+
+# Alias for 'make deploy' for backward compatibility
+backend: deploy
+
+# ==============================================================================
+# Testing & Code Quality
+# ==============================================================================
+
+# Run unit and integration tests
+test:
+	uv sync --dev
+	uv run pytest tests/unit && uv run pytest tests/integration
+
+# Run code quality checks (codespell, ruff, ty)
 lint:
+	uv sync --dev --extra lint
 	uv run codespell
 	uv run ruff check . --diff
 	uv run ruff format . --check --diff
-	uv run mypy .
-
-test-agent-engine:
-	VERTEX_RUNTIME=$$(cat deployment_metadata.json | jq -r .remote_agent_engine_id) && \
-	(curl -H "Authorization: Bearer $$(gcloud auth print-access-token)" -H "Content-Type: application/json" https://$${REGION}-aiplatform.googleapis.com/v1/$${VERTEX_RUNTIME}:query \
-	-d "{\"class_method\": \"create_session\", \"input\": {\"user_id\": \"$${USER}@google.com\"},}" | jq -r .output.id > sessionid.txt) && \
-	(curl -N -H "Authorization: Bearer $$(gcloud auth print-access-token)" -H "Content-Type: application/json" https://$${REGION}-aiplatform.googleapis.com/v1/$${VERTEX_RUNTIME}:streamQuery?alt=sse \
-	-d "{\"class_method\": \"stream_query\",\"input\": {\"user_id\": \"$${USER}@google.com\",\"session_id\": \"$$(cat sessionid.txt)\",\"message\": \"Can you recommend some action movies?\",}}")
-
-test-run-sse:
-	(curl -H "x-goog-authenticated-user-email: $${USER}@google.com" "https://movie-guru-agent-$${PROJECT_NUMBER}.$${REGION}.run.app/sessions" -H "Content-Type: application/json" -d "{\"state\": {\"login\": \"true\"}}" | jq -r .session_id > sessionid.txt) && \
-	(curl -N -H "x-goog-authenticated-user-email: $${USER}@google.com" -H "Content-Type: application/json" "https://movie-guru-agent-$${PROJECT_NUMBER}.$${REGION}.run.app/run_sse" -d "{\"appName\": \"app\",\"userId\": \"$${USER}@google.com\",\"sessionId\": \"$$(cat sessionid.txt)\",\"newMessage\": {\"role\": \"user\",\"parts\": [{\"text\": \"Can you recommend a few action movies?\"}]},\"streaming\": false}")
+	uv run ty check .
