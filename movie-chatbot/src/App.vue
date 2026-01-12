@@ -20,7 +20,8 @@ import { ref, onMounted, reactive, nextTick } from 'vue';
 
 export default {
   setup() {
-    const apiBaseUrl = "https://movieguruagent.endpoints.srinandans-next25-demo.cloud.goog";
+    const projectId = import.meta.env.VITE_PROJECT_ID;
+    const apiBaseUrl = `https://movieguruagent.endpoints.${projectId}.cloud.goog`;
 
     const sessionId = ref(null);
     const sessionUserId = ref(null);
