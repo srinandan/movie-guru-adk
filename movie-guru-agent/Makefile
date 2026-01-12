@@ -54,3 +54,7 @@ lint:
 	uv run ruff check . --diff
 	uv run ruff format . --check --diff
 	uv run ty check .
+
+# Set up development environment resources using Terraform
+setup-dev-env:
+	cd deployment/terraform/dev && terraform init && terraform apply

@@ -1,6 +1,7 @@
 # movie-guru-agent
 
-A base ReAct agent built with Google's Agent Development Kit (ADK)
+This is an orchestration agent that recommends movies to a user. It interacts with an MCP Server to query movies, uses subagents to analyze the conversations, update the user profile etc.
+
 Agent generated with [`googleCloudPlatform/agent-starter-pack`](https://github.com/GoogleCloudPlatform/agent-starter-pack) version `0.29.4`
 
 ## Project Structure
@@ -49,7 +50,6 @@ make install && make playground
 | `make install`       | Install all required dependencies using uv                                                  |
 | `make playground`    | Launch local development environment for testing agent |
 | `make deploy`        | Deploy agent to Agent Engine |
-| `make register-gemini-enterprise` | Register deployed agent to Gemini Enterprise ([docs](https://googlecloudplatform.github.io/agent-starter-pack/cli/register_gemini_enterprise.html)) |
 | `make test`          | Run unit and integration tests                                                              |
 | `make lint`          | Run code quality checks (codespell, ruff, ty)                                               |
 | `make setup-dev-env` | Set up development environment resources using Terraform                         |
