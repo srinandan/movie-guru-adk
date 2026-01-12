@@ -39,14 +39,14 @@ The application is composed of the following core components:
 │   └── deployment
 ├── ollama                # Ollama deployment for local models  
 │   └── deployment
-└── terraform
-    ├── movies-data       # Movies data
-    └── movies-posters    # Movies posters
+├── terraform             # Terraform scripts for provisioning the necessary infrastructure
+│   ├── movies-data       # Movies data
+│   └── movies-posters    # Movies posters
 ```
 
 ## Getting Started
 
-The application is designed to be deployed on Google Cloud Platform. The [terraform](./terraform/README.md) directory contains Terraform scripts for provisioning the necessary infrastructure (e.g., Cloud SQL, GCS, Artifact Registry).
+The application is designed to be deployed on Google Cloud Platform. The [terraform](./terraform/README.md) directory contains Terraform scripts for provisioning the necessary infrastructure (e.g., Cloud SQL, GCS, Artifact Registry). This version uses Cloud Run as the runtime for AI Agents. To see the version that uses Vertex AI, please see this [branch](https://github.com/srinandans/movie-guru-adk/tree/reasoning).
 
 ```sh
 cd terraform && make worker-pool && make backend
