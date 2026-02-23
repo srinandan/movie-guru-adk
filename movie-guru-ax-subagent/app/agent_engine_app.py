@@ -43,6 +43,7 @@ class AgentEngineApp(A2aAgent):
         app: App | None = None,
         artifact_service: Any = None,
         session_service: Any = None,
+        memory_service: Any = None,
     ) -> Any:
         """Create an AgentEngineApp instance.
 
@@ -58,6 +59,7 @@ class AgentEngineApp(A2aAgent):
                 app=app,
                 session_service=session_service,
                 artifact_service=artifact_service,
+                memory_service=memory_service,
             )
 
         # Build agent card in an async context if needed
@@ -119,7 +121,10 @@ class AgentEngineApp(A2aAgent):
 
 gemini_location = os.environ.get("GOOGLE_CLOUD_LOCATION")
 gemini_project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
+
 logs_bucket_name = os.environ.get("LOGS_BUCKET_NAME")
+reasoning_engine_id = os.environ.get("REASONING_ENGINE_ID")
+
 agent_engine = AgentEngineApp.create(
     app=adk_app,
     artifact_service=(
@@ -128,4 +133,5 @@ agent_engine = AgentEngineApp.create(
         else InMemoryArtifactService()
     ),
     session_service=VertexAiSessionService(project=gemini_project_id,location=gemini_location),
+    memory_service=VertexAiMemoryBankService(project=gemini_project_id, location=gemini_location, agent_engine_id=reasoning_engine_id)
 )

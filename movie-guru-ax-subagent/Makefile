@@ -1,8 +1,7 @@
 PROJECT_ID ?= $(shell gcloud config get-value project)
 PROJECT_NUMBER ?= $(shell gcloud projects describe ${PROJECT_ID} --format="value(projectNumber)")
 REGION ?= us-central1
-_COMMIT_SHA ?= $(shell echo | find *.py pyproject.toml uv.lock -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -c 1-10)
-
+REASONING_ENGINE_ID ?= "2733910373697585152"
 
 # Install dependencies using uv package manager
 install:
@@ -21,12 +20,18 @@ playground:
 # Deploy the agent remotely
 deploy:
 	# Export dependencies to requirements file using uv export.
+	export REGION=${REGION} ;\
+	export PROJECT_ID=${PROJECT_ID} ;\
+	export PROJECT_NUMBER=${PROJECT_NUMBER} ;\
+	export REASONING_ENGINE_ID=${REASONING_ENGINE_ID} ;\
+	export A2A_CONV_AGENT=${A2A_CONV_AGENT} ;\
 	(uv export --no-hashes --no-header --no-dev --no-emit-project --no-annotate > app/app_utils/.requirements.txt 2>/dev/null || \
 	uv export --no-hashes --no-header --no-dev --no-emit-project > app/app_utils/.requirements.txt) && \
 	uv run -m app.app_utils.deploy \
 		--source-packages=./app \
 		--entrypoint-module=app.agent_engine_app \
 		--entrypoint-object=agent_engine \
+		--set-env-vars="REASONING_ENGINE_ID=${REASONING_ENGINE_ID}" \
 		--requirements-file=app/app_utils/.requirements.txt
 
 # Alias for 'make deploy' for backward compatibility
