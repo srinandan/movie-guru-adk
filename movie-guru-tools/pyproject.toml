@@ -7,7 +7,7 @@ requires-python = ">=3.11,<=3.14"
 dependencies = [
     "annotated-types==0.7.0",
     "anyio==4.9.0",
-    "authlib>=1.6.5",
+    "authlib>=1.6.12",
     "cachetools==5.5.2",
     "certifi==2025.6.15",
     "cffi==1.17.1",
