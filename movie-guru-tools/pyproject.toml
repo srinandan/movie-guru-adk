@@ -37,7 +37,7 @@ dependencies = [
     "httpcore>=1.0.9",
     "httpx>=0.28.1",
     "httpx-sse>=0.4.0",
-    "idna==3.10",
+    "idna==3.15",
     "litellm>=1.80.5",
     "markdown-it-py==3.0.0",
     "mcp>=1.9.4",
